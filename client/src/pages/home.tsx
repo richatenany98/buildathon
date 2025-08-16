@@ -15,7 +15,9 @@ export default function Home() {
       return response.json() as Promise<Repository>;
     },
     onSuccess: (repository) => {
-      setLocation(`/analysis/${repository.id}`);
+      // Use _id for MongoDB, id for fallback compatibility
+      const repositoryId = repository._id || repository.id;
+      setLocation(`/analysis/${repositoryId}`);
     },
   });
 

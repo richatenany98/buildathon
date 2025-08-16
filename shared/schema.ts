@@ -4,6 +4,7 @@ import { z } from "zod";
 // MongoDB Schema Definitions
 export interface Repository extends Document {
   _id: string;
+  id?: string; // For compatibility with frontend that might expect 'id'
   url: string;
   name: string;
   description?: string;

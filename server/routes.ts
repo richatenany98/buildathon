@@ -68,8 +68,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let repository;
       
       if (existing) {
-        // Reset analysis status to queued for re-analysis
-        repository = await storage.updateRepository(existing.id, { analysisStatus: "queued" });
+        // Reset analysis status to queued for re-analysis  
+        const existingId = existing._id || existing.id;
+        repository = await storage.updateRepository(existingId, { analysisStatus: "queued" });
       } else {
         // Create new repository record
         repository = await storage.createRepository(repositoryData);
@@ -77,7 +78,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(repository);
 
       // Start analysis in background
-      analyzeRepositoryBackground(repository.id);
+      const repositoryId = repository._id || repository.id;
+      analyzeRepositoryBackground(repositoryId);
     } catch (error) {
       res.status(400).json({ error: (error as Error).message });
     }
