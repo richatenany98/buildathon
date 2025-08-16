@@ -51,7 +51,7 @@ export class AIAnalyzer {
     return cleaned.trim();
   }
   async analyzeCommitBatches(repositoryId: string, commits: Commit[]): Promise<AnalyzedChange[]> {
-    const batchSize = 50;
+    const batchSize = 20; // Reduced batch size for faster processing
     const batches = this.chunkArray(commits, batchSize);
     const analyzedChanges: AnalyzedChange[] = [];
 
@@ -60,10 +60,18 @@ export class AIAnalyzer {
       console.log(`Analyzing batch ${i + 1}/${batches.length} (${batch.length} commits)`);
       
       try {
-        const batchChanges = await this.analyzeBatch(batch);
+        // Add timeout to prevent hanging
+        const batchChanges = await Promise.race([
+          this.analyzeBatch(batch),
+          new Promise<AnalyzedChange[]>((_, reject) => 
+            setTimeout(() => reject(new Error('Batch analysis timeout')), 60000) // 60 second timeout
+          )
+        ]);
         analyzedChanges.push(...batchChanges);
+        console.log(`Batch ${i + 1} completed: found ${batchChanges.length} change events`);
       } catch (error) {
         console.error(`Failed to analyze batch ${i + 1}: ${error.message}`);
+        // Continue with next batch instead of stopping
       }
     }
 
