@@ -28,23 +28,36 @@ export class GitAnalyzer {
   }
 
   async cloneRepository(repo: Repository): Promise<string> {
-    const tempDir = path.join(tmpdir(), 'codebase-analysis', repo.id);
+    const baseDir = path.join(tmpdir(), 'codebase-analysis');
+    const tempDir = path.join(baseDir, repo.id);
     
     try {
-      // Create temp directory
-      await fs.mkdir(tempDir, { recursive: true });
+      // Create base directory
+      await fs.mkdir(baseDir, { recursive: true });
       
-      // Initialize git in temp directory
+      // Remove existing directory if it exists
+      try {
+        await fs.rm(tempDir, { recursive: true, force: true });
+      } catch {
+        // Directory doesn't exist, continue
+      }
+      
+      // Clone repository with full history
+      this.git = simpleGit();
+      await this.git.clone(repo.url, tempDir);
+      
+      // Switch to cloned repository
       this.git = simpleGit(tempDir);
       this.repoPath = tempDir;
-
-      // Clone repository
-      await this.git.clone(repo.url, tempDir, ['--depth=0']);
       
       // Switch to specific branch if not main/master
       if (repo.defaultRef !== 'refs/heads/main' && repo.defaultRef !== 'refs/heads/master') {
         const branchName = repo.defaultRef.replace('refs/heads/', '');
-        await this.git.checkout(branchName);
+        try {
+          await this.git.checkout(branchName);
+        } catch (error) {
+          console.warn(`Could not switch to branch ${branchName}, using default branch`);
+        }
       }
 
       return tempDir;
