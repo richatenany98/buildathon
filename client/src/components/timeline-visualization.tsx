@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ArrowUp } from "lucide-react";
 import type { ChangeEvent } from "@shared/schema";
 
 interface TimelineVisualizationProps {
@@ -37,10 +38,15 @@ const formatCategory = (category: string) => {
 };
 
 export default function TimelineVisualization({ events }: TimelineVisualizationProps) {
+  const [showAll, setShowAll] = useState(false);
+  
   // Sort events by timestamp (most recent first)
-  const sortedEvents = [...events].sort((a, b) => 
+  const allSortedEvents = [...events].sort((a, b) => 
     new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-  ).slice(0, 10); // Show only recent 10 events
+  );
+  
+  // Show only recent 10 events unless user wants to see all
+  const sortedEvents = showAll ? allSortedEvents : allSortedEvents.slice(0, 10);
 
   if (sortedEvents.length === 0) {
     return (
@@ -116,9 +122,23 @@ export default function TimelineVisualization({ events }: TimelineVisualizationP
 
         {events.length > 10 && (
           <div className="mt-6 text-center">
-            <Button variant="outline" size="sm" data-testid="button-view-complete-timeline">
-              View Complete Timeline 
-              <ArrowRight className="w-4 h-4 ml-1" />
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setShowAll(!showAll)}
+              data-testid="button-view-complete-timeline"
+            >
+              {showAll ? (
+                <>
+                  Show Recent Only
+                  <ArrowUp className="w-4 h-4 ml-1" />
+                </>
+              ) : (
+                <>
+                  View Complete Timeline ({events.length} total)
+                  <ArrowRight className="w-4 h-4 ml-1" />
+                </>
+              )}
             </Button>
           </div>
         )}
