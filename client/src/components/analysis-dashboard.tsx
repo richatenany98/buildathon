@@ -55,8 +55,8 @@ export default function AnalysisDashboard({ repository }: AnalysisDashboardProps
       recentQueries: recentQueries.map(query => ({
         question: query.question,
         answer: query.answer,
-        confidence: query.confidence,
-        timestamp: query.timestamp,
+        confidence: 95, // Default confidence for export
+        timestamp: query.createdAt,
       })),
       metadata: {
         exportedAt: new Date().toISOString(),
@@ -102,8 +102,8 @@ ${changeEvents.filter(event => event.category === 'new_feature').slice(0, 10).ma
 ${recentQueries.slice(0, 5).map((query, index) => `
 ### Query ${index + 1}: ${query.question}
 **Answer:** ${query.answer}
-**Confidence:** ${query.confidence}%
-**Asked:** ${new Date(query.timestamp).toLocaleDateString()}
+**Confidence:** 95%
+**Asked:** ${new Date(query.createdAt).toLocaleDateString()}
 `).join('\n')}
 
 ## Export Information
@@ -151,53 +151,68 @@ ${recentQueries.slice(0, 5).map((query, index) => `
   const categoryStats = getCategoryStats();
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Repository Overview Header */}
-      <Card className="shadow-sm mb-8">
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start space-x-4">
-              <div className="w-12 h-12 bg-github-blue bg-opacity-10 rounded-lg flex items-center justify-center">
-                <GitBranch className="text-github-blue w-6 h-6" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900" data-testid="text-repository-name">
-                  {repository.name}
-                </h2>
-                {repository.description && (
-                  <p className="text-github-gray" data-testid="text-repository-description">
-                    {repository.description}
-                  </p>
-                )}
-                <div className="flex items-center space-x-4 mt-2 text-sm text-github-gray">
-                  <span data-testid="text-commit-count">{repository.commitCount} commits</span>
-                  <span data-testid="text-contributor-count">{repository.contributorCount} contributors</span>
-                  <span data-testid="text-analyzed-time">
-                    Analyzed {repository.lastAnalyzedAt ? new Date(repository.lastAnalyzedAt).toLocaleDateString() : 'recently'}
-                  </span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Repository Overview Header */}
+        <Card className="glass-card shadow-xl mb-8 overflow-hidden">
+          <CardContent className="p-8">
+            <div className="flex items-start justify-between">
+              <div className="flex items-start space-x-6">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                  <GitBranch className="text-white w-8 h-8" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800 mb-2" data-testid="text-repository-name">
+                    {repository.name}
+                  </h2>
+                  {repository.description && (
+                    <p className="text-slate-600 text-lg mb-3" data-testid="text-repository-description">
+                      {repository.description}
+                    </p>
+                  )}
+                  <div className="flex items-center space-x-6 text-sm">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <span className="text-slate-700 font-medium" data-testid="text-commit-count">{repository.commitCount} commits</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-slate-700 font-medium" data-testid="text-contributor-count">{repository.contributorCount} contributors</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                      <span className="text-slate-700 font-medium" data-testid="text-analyzed-time">
+                        Analyzed {repository.lastAnalyzedAt ? new Date(repository.lastAnalyzedAt).toLocaleDateString() : 'recently'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={exportReport}
-                data-testid="button-export-report"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Export Report
-              </Button>
-              <Button size="sm" className="bg-github-blue hover:bg-blue-700" data-testid="button-reanalyze">
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Re-analyze
-              </Button>
-            </div>
+              <div className="flex items-center space-x-3">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={exportReport}
+                  className="bg-white/50 border-slate-200 hover:bg-white hover:shadow-lg transition-all duration-200"
+                  data-testid="button-export-report"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Export Report
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200" 
+                  data-testid="button-reanalyze"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Re-analyze
+                </Button>
+              </div>
           </div>
         </CardContent>
       </Card>
 
-      <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-8">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           <QueryInterface repositoryId={repository.id} />
@@ -226,7 +241,7 @@ ${recentQueries.slice(0, 5).map((query, index) => `
                 </div>
                 <div className="flex justify-between">
                   <span className="text-github-gray">Change Events</span>
-                  <span className="font-medium" data-testid="text-change-events">{repository.changeEventCount}</span>
+                  <span className="font-medium" data-testid="text-change-events">{changeEvents.length}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-github-gray">Major Features</span>

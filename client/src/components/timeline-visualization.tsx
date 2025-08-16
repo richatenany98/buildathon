@@ -62,19 +62,23 @@ export default function TimelineVisualization({ events }: TimelineVisualizationP
   }
 
   return (
-    <Card className="shadow-sm">
-      <CardContent className="p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Evolution Timeline</h3>
+    <Card className="glass-card shadow-xl">
+      <CardContent className="p-8">
+        <h3 className="text-xl font-semibold text-slate-800 mb-6 flex items-center">
+          <div className="w-2 h-6 bg-gradient-to-b from-blue-500 to-purple-600 rounded-full mr-3"></div>
+          Evolution Timeline
+        </h3>
         
         <div className="relative">
-          {/* Timeline axis */}
-          <div className="absolute left-6 top-0 bottom-0 w-px bg-gray-200" />
+          {/* Enhanced Timeline axis with gradient */}
+          <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-400 via-purple-500 to-indigo-600 rounded-full opacity-60" />
           
-          <div className="space-y-6">
+          <div className="space-y-8">
             {sortedEvents.map((event, index) => (
-              <div key={event.id} className="relative flex items-start space-x-4" data-testid={`timeline-event-${index}`}>
-                <div className="flex-shrink-0">
-                  <div className={`w-3 h-3 ${getCategoryColor(event.category)} rounded-full border-2 border-white shadow`} />
+              <div key={event.id} className="relative flex items-start space-x-6 group hover:bg-slate-50/50 rounded-lg p-4 -m-4 transition-all duration-200" data-testid={`timeline-event-${index}`}>
+                <div className="flex-shrink-0 relative">
+                  <div className={`w-4 h-4 ${getCategoryColor(event.category)} rounded-full border-4 border-white shadow-lg group-hover:scale-110 transition-transform duration-200`} />
+                  <div className={`absolute inset-0 w-4 h-4 ${getCategoryColor(event.category)} rounded-full animate-ping opacity-20`}></div>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2 mb-1">
