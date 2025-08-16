@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codebase Time Machine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'github-blue': '#0969da',
+                        'github-gray': '#656d76',
+                        'github-success': '#1a7f37',
+                        'github-warning': '#fb8500',
+                        'github-error': '#da1445',
+                        'github-bg': '#f6f8fa'
+                    },
+                    fontFamily: {
+                        'mono': ['Fira Code', 'monospace'],
+                    }
+                }
+            }
+        };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'Fira Code', monospace; }
+    </style>
+</head>
+<body class="bg-white text-gray-900 min-h-screen">
+
+    <!-- @COMPONENT: Navigation Header -->
+    <nav class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-clock text-github-blue text-2xl"></i>
+                    </div>
+                    <h1 class="text-xl font-semibold text-gray-900">Codebase Time Machine</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="text-github-gray hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium">
+                        <i class="fas fa-book mr-2"></i>Docs
+                    </button>
+                    <button class="bg-github-blue text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700">
+                        <i class="fas fa-plus mr-2"></i>New Analysis
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <!-- @END_COMPONENT: Navigation Header -->
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- @COMPONENT: Repository Input Section -->
+        <div id="inputSection" class="mb-8">
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">Understand Your Code's Evolution</h2>
+                <p class="text-lg text-github-gray max-w-2xl mx-auto">
+                    Analyze your repository's complete Git history to uncover semantic insights, 
+                    architectural decisions, and the "why" behind every change.
+                </p>
+            </div>
+
+            <div class="max-w-2xl mx-auto bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                <form class="space-y-4">
+                    <div>
+                        <label for="repoUrl" class="block text-sm font-medium text-gray-700 mb-2">
+                            Repository URL
+                        </label>
+                        <div class="relative">
+                            <input 
+                                type="url" 
+                                id="repoUrl" 
+                                data-mock="true"
+                                placeholder="https://github.com/username/repository.git"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-github-blue focus:border-github-blue pl-10"
+                            />
+                            <i class="fas fa-code-branch absolute left-3 top-1/2 transform -translate-y-1/2 text-github-gray"></i>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="branch" class="block text-sm font-medium text-gray-700 mb-2">
+                                Branch (Optional)
+                            </label>
+                            <input 
+                                type="text" 
+                                id="branch" 
+                                data-mock="true"
+                                placeholder="main"
+                                class="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-github-blue focus:border-github-blue"
+                            />
+                        </div>
+                        <div>
+                            <label for="protocol" class="block text-sm font-medium text-gray-700 mb-2">
+                                Protocol
+                            </label>
+                            <select class="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-github-blue focus:border-github-blue">
+                                <option>HTTPS</option>
+                                <option>SSH</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button 
+                        type="submit" 
+                        data-event="click:startAnalysis"
+                        class="w-full bg-github-blue text-white py-3 px-4 rounded-md hover:bg-blue-700 font-medium flex items-center justify-center space-x-2"
+                    >
+                        <i class="fas fa-search"></i>
+                        <span>Start Analysis</span>
+                    </button>
+                </form>
+
+                <div class="mt-6 text-center">
+                    <p class="text-sm text-github-gray">
+                        Analysis typically takes 2-10 minutes depending on repository size
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-8 text-center">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">What You'll Discover</h3>
+                <div class="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                    <div class="text-center p-4">
+                        <div class="w-12 h-12 bg-github-blue bg-opacity-10 rounded-lg flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-brain text-github-blue text-xl"></i>
+                        </div>
+                        <h4 class="font-medium mb-2">Semantic Understanding</h4>
+                        <p class="text-sm text-github-gray">AI-powered analysis reveals the purpose behind code changes</p>
+                    </div>
+                    <div class="text-center p-4">
+                        <div class="w-12 h-12 bg-github-success bg-opacity-10 rounded-lg flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-timeline text-github-success text-xl"></i>
+                        </div>
+                        <h4 class="font-medium mb-2">Evolution Timeline</h4>
+                        <p class="text-sm text-github-gray">Visualize how features and architecture evolved over time</p>
+                    </div>
+                    <div class="text-center p-4">
+                        <div class="w-12 h-12 bg-github-warning bg-opacity-10 rounded-lg flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-question-circle text-github-warning text-xl"></i>
+                        </div>
+                        <h4 class="font-medium mb-2">Natural Language Q&A</h4>
+                        <p class="text-sm text-github-gray">Ask questions about your codebase evolution in plain English</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: Repository Input Section -->
+
+        <!-- @COMPONENT: Analysis Progress Section -->
+        <div id="progressSection" class="mb-8 hidden">
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900">Analyzing Repository</h3>
+                            <p class="text-github-gray" data-bind="repository.url">https://github.com/facebook/react.git</p>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-bold text-github-blue" data-bind="progress.percentage">67%</div>
+                            <div class="text-sm text-github-gray">Complete</div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <!-- @STATE: progressSteps:array with completion status -->
+                        <div class="flex items-center space-x-4">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 bg-github-success rounded-full flex items-center justify-center">
+                                    <i class="fas fa-check text-white text-sm"></i>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between">
+                                    <span class="text-sm font-medium text-gray-900">Repository Cloning</span>
+                                    <span class="text-sm text-github-gray">Completed</span>
+                                </div>
+                                <div class="text-xs text-github-gray">Cloned 15,432 commits across 247 files</div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-4">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 bg-github-success rounded-full flex items-center justify-center">
+                                    <i class="fas fa-check text-white text-sm"></i>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between">
+                                    <span class="text-sm font-medium text-gray-900">Change Extraction</span>
+                                    <span class="text-sm text-github-gray">Completed</span>
+                                </div>
+                                <div class="text-xs text-github-gray">Extracted diffs and metadata from all commits</div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-4">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 bg-github-blue rounded-full flex items-center justify-center animate-pulse">
+                                    <i class="fas fa-cog fa-spin text-white text-sm"></i>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between">
+                                    <span class="text-sm font-medium text-gray-900">AI Semantic Analysis</span>
+                                    <span class="text-sm text-github-gray">In Progress</span>
+                                </div>
+                                <div class="text-xs text-github-gray">Categorizing changes and extracting rationale... (8,234/15,432 commits)</div>
+                                <div class="mt-2">
+                                    <div class="bg-gray-200 rounded-full h-2">
+                                        <div class="bg-github-blue h-2 rounded-full" style="width: 53%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center space-x-4 opacity-50">
+                            <div class="flex-shrink-0">
+                                <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-clock text-github-gray text-sm"></i>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex justify-between">
+                                    <span class="text-sm font-medium text-gray-900">Building Temporal Index</span>
+                                    <span class="text-sm text-github-gray">Pending</span>
+                                </div>
+                                <div class="text-xs text-github-gray">Creating searchable embeddings for Q&A</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-6 border-t border-gray-200">
+                        <div class="flex justify-between text-sm text-github-gray">
+                            <span>Estimated time remaining: 3-5 minutes</span>
+                            <span>Started 4 minutes ago</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: Analysis Progress Section -->
+
+        <!-- @COMPONENT: Main Dashboard -->
+        <div id="dashboardSection" class="space-y-8">
+            
+            <!-- Repository Overview Header -->
+            <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                <div class="flex items-start justify-between">
+                    <div class="flex items-start space-x-4">
+                        <div class="w-12 h-12 bg-github-blue bg-opacity-10 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-code-branch text-github-blue text-xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-semibold text-gray-900" data-bind="repository.name">facebook/react</h2>
+                            <p class="text-github-gray" data-bind="repository.description">A declarative, efficient, and flexible JavaScript library for building user interfaces.</p>
+                            <div class="flex items-center space-x-4 mt-2 text-sm text-github-gray">
+                                <span data-bind="repository.commits">15,432 commits</span>
+                                <span data-bind="repository.contributors">1,247 contributors</span>
+                                <span data-bind="repository.analyzed_at">Analyzed 2 minutes ago</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button class="bg-gray-50 text-github-gray px-3 py-2 rounded-md text-sm hover:bg-gray-100">
+                            <i class="fas fa-download mr-2"></i>Export Report
+                        </button>
+                        <button class="bg-github-blue text-white px-3 py-2 rounded-md text-sm hover:bg-blue-700">
+                            <i class="fas fa-refresh mr-2"></i>Re-analyze
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid lg:grid-cols-3 gap-8">
+                
+                <!-- Q&A Interface -->
+                <div class="lg:col-span-2 space-y-6">
+                    
+                    <!-- @COMPONENT: Natural Language Query -->
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Ask About Your Code Evolution</h3>
+                        
+                        <div class="space-y-4">
+                            <div class="relative">
+                                <textarea 
+                                    rows="3" 
+                                    placeholder="Ask anything... e.g., 'Why was authentication added?' or 'How did the component architecture evolve?'"
+                                    class="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-github-blue focus:border-github-blue resize-none"
+                                    data-mock="true"
+                                ></textarea>
+                                <button 
+                                    class="absolute bottom-3 right-3 bg-github-blue text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700"
+                                    data-event="click:submitQuery"
+                                >
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+
+                            <div class="flex flex-wrap gap-2">
+                                <span class="text-sm text-github-gray">Try asking:</span>
+                                <button class="text-sm bg-github-bg text-github-blue px-3 py-1 rounded-full hover:bg-blue-50" data-event="click:fillQuery">
+                                    "Why was Redux introduced?"
+                                </button>
+                                <button class="text-sm bg-github-bg text-github-blue px-3 py-1 rounded-full hover:bg-blue-50" data-event="click:fillQuery">
+                                    "Show major architecture changes"
+                                </button>
+                                <button class="text-sm bg-github-bg text-github-blue px-3 py-1 rounded-full hover:bg-blue-50" data-event="click:fillQuery">
+                                    "How did testing evolve?"
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: Natural Language Query -->
+
+                    <!-- @COMPONENT: Query Results -->
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                        <div class="flex items-center space-x-2 mb-4">
+                            <i class="fas fa-search text-github-blue"></i>
+                            <h4 class="font-medium text-gray-900" data-mock="true">"Why was JSX introduced to React?"</h4>
+                        </div>
+
+                        <div class="prose max-w-none">
+                            <div class="bg-blue-50 border-l-4 border-github-blue p-4 mb-6" data-mock="true">
+                                <div class="font-medium text-gray-900 mb-2">Key Insight</div>
+                                <p class="text-github-gray text-sm">
+                                    JSX was introduced in early React development (commits <code>a1b2c3d</code> through <code>e4f5g6h</code>) 
+                                    to solve the problem of complex, nested function calls for creating elements. 
+                                    The team wanted a more declarative syntax that resembled HTML while maintaining JavaScript's power.
+                                </p>
+                            </div>
+
+                            <div class="space-y-4" data-mock="true">
+                                <div class="border border-gray-200 rounded-lg p-4">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center space-x-2">
+                                            <div class="w-2 h-2 bg-github-success rounded-full"></div>
+                                            <span class="text-sm font-medium">Major Change Event</span>
+                                        </div>
+                                        <span class="text-xs text-github-gray">March 15, 2013</span>
+                                    </div>
+                                    <h5 class="font-medium mb-2">Initial JSX Implementation</h5>
+                                    <p class="text-sm text-github-gray mb-3">
+                                        Introduced JSX transformer and syntax support to replace verbose React.createElement calls.
+                                    </p>
+                                    <div class="flex items-center space-x-4 text-xs text-github-gray">
+                                        <span><i class="fas fa-code-commit mr-1"></i>3 commits</span>
+                                        <span><i class="fas fa-user mr-1"></i>Jordan Walke</span>
+                                        <span><i class="fas fa-file mr-1"></i>12 files changed</span>
+                                    </div>
+                                </div>
+
+                                <div class="border border-gray-200 rounded-lg p-4">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center space-x-2">
+                                            <div class="w-2 h-2 bg-github-warning rounded-full"></div>
+                                            <span class="text-sm font-medium">Related Change</span>
+                                        </div>
+                                        <span class="text-xs text-github-gray">March 22, 2013</span>
+                                    </div>
+                                    <h5 class="font-medium mb-2">JSX Documentation and Examples</h5>
+                                    <p class="text-sm text-github-gray mb-3">
+                                        Added comprehensive documentation explaining JSX benefits and usage patterns.
+                                    </p>
+                                    <div class="flex items-center space-x-4 text-xs text-github-gray">
+                                        <span><i class="fas fa-code-commit mr-1"></i>1 commit</span>
+                                        <span><i class="fas fa-user mr-1"></i>Pete Hunt</span>
+                                        <span><i class="fas fa-file mr-1"></i>5 files changed</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-6 pt-4 border-t border-gray-200">
+                                <div class="text-xs text-github-gray">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    Analysis based on 127 commits, 23 files, and commit messages from March 2013
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: Query Results -->
+
+                    <!-- @COMPONENT: Timeline Visualization -->
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Evolution Timeline</h3>
+                        
+                        <div class="relative">
+                            <!-- Timeline axis -->
+                            <div class="absolute left-6 top-0 bottom-0 w-px bg-gray-200"></div>
+                            
+                            <div class="space-y-6" data-mock="true">
+                                <!-- Timeline item -->
+                                <div class="relative flex items-start space-x-4">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-3 h-3 bg-github-success rounded-full border-2 border-white shadow"></div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center space-x-2 mb-1">
+                                            <span class="text-sm font-medium">Initial React Release</span>
+                                            <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">New Feature</span>
+                                        </div>
+                                        <p class="text-sm text-github-gray mb-2">
+                                            Core library with virtual DOM, components, and initial JSX support
+                                        </p>
+                                        <div class="text-xs text-github-gray">May 2013 • 47 commits • Jordan Walke</div>
+                                    </div>
+                                </div>
+
+                                <div class="relative flex items-start space-x-4">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-3 h-3 bg-github-blue rounded-full border-2 border-white shadow"></div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center space-x-2 mb-1">
+                                            <span class="text-sm font-medium">Component State Management</span>
+                                            <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Enhancement</span>
+                                        </div>
+                                        <p class="text-sm text-github-gray mb-2">
+                                            Added setState, lifecycle methods, and proper state handling patterns
+                                        </p>
+                                        <div class="text-xs text-github-gray">August 2013 • 23 commits • Multiple authors</div>
+                                    </div>
+                                </div>
+
+                                <div class="relative flex items-start space-x-4">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-3 h-3 bg-github-warning rounded-full border-2 border-white shadow"></div>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center space-x-2 mb-1">
+                                            <span class="text-sm font-medium">Performance Optimizations</span>
+                                            <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">Optimization</span>
+                                        </div>
+                                        <p class="text-sm text-github-gray mb-2">
+                                            Virtual DOM diffing improvements and shouldComponentUpdate introduction
+                                        </p>
+                                        <div class="text-xs text-github-gray">October 2013 • 15 commits • Sebastian Markbåge</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 text-center">
+                            <button class="text-github-blue text-sm hover:underline">
+                                View Complete Timeline <i class="fas fa-arrow-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: Timeline Visualization -->
+                </div>
+
+                <!-- Sidebar - Stats and Quick Actions -->
+                <div class="space-y-6">
+                    
+                    <!-- @COMPONENT: Repository Stats -->
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Analysis Summary</h3>
+                        
+                        <div class="space-y-4" data-mock="true">
+                            <div class="flex justify-between">
+                                <span class="text-github-gray">Total Commits</span>
+                                <span class="font-medium">15,432</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-github-gray">Contributors</span>
+                                <span class="font-medium">1,247</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-github-gray">Files Analyzed</span>
+                                <span class="font-medium">2,847</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-github-gray">Change Events</span>
+                                <span class="font-medium">342</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-github-gray">Major Features</span>
+                                <span class="font-medium">23</span>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 pt-4 border-t border-gray-200">
+                            <div class="text-sm">
+                                <div class="flex justify-between mb-2">
+                                    <span class="text-github-gray">Analysis Confidence</span>
+                                    <span class="font-medium text-github-success">94%</span>
+                                </div>
+                                <div class="bg-gray-200 rounded-full h-2">
+                                    <div class="bg-github-success h-2 rounded-full" style="width: 94%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: Repository Stats -->
+
+                    <!-- @COMPONENT: Change Categories -->
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Change Categories</h3>
+                        
+                        <div class="space-y-3" data-mock="true">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-3 h-3 bg-github-success rounded-full"></div>
+                                    <span class="text-sm">New Features</span>
+                                </div>
+                                <span class="text-sm font-medium">23</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-3 h-3 bg-github-blue rounded-full"></div>
+                                    <span class="text-sm">Enhancements</span>
+                                </div>
+                                <span class="text-sm font-medium">156</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-3 h-3 bg-github-error rounded-full"></div>
+                                    <span class="text-sm">Bug Fixes</span>
+                                </div>
+                                <span class="text-sm font-medium">89</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-3 h-3 bg-github-warning rounded-full"></div>
+                                    <span class="text-sm">Refactoring</span>
+                                </div>
+                                <span class="text-sm font-medium">74</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: Change Categories -->
+
+                    <!-- @COMPONENT: Recent Queries -->
+                    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Recent Queries</h3>
+                        
+                        <div class="space-y-3" data-mock="true">
+                            <button class="w-full text-left p-3 rounded-lg hover:bg-gray-50 border border-gray-100">
+                                <div class="text-sm font-medium text-gray-900 mb-1">
+                                    "Why was JSX introduced?"
+                                </div>
+                                <div class="text-xs text-github-gray">2 minutes ago</div>
+                            </button>
+                            <button class="w-full text-left p-3 rounded-lg hover:bg-gray-50 border border-gray-100">
+                                <div class="text-sm font-medium text-gray-900 mb-1">
+                                    "How did testing evolve?"
+                                </div>
+                                <div class="text-xs text-github-gray">1 hour ago</div>
+                            </button>
+                            <button class="w-full text-left p-3 rounded-lg hover:bg-gray-50 border border-gray-100">
+                                <div class="text-sm font-medium text-gray-900 mb-1">
+                                    "Show architecture changes"
+                                </div>
+                                <div class="text-xs text-github-gray">Yesterday</div>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: Recent Queries -->
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: Main Dashboard -->
+
+        <!-- @COMPONENT: Detailed Analysis Modal (Hidden by default) -->
+        <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+                <div class="flex items-center justify-between p-6 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">Detailed Change Analysis</h3>
+                    <button class="text-github-gray hover:text-gray-900" data-event="click:closeModal">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="p-6 overflow-y-auto" data-mock="true">
+                    <div class="space-y-6">
+                        <div>
+                            <h4 class="font-medium text-gray-900 mb-2">Commit Details</h4>
+                            <div class="bg-gray-50 rounded-lg p-4 font-mono text-sm">
+                                <div class="flex justify-between items-start mb-2">
+                                    <span class="font-medium">a1b2c3d4e5f6</span>
+                                    <span class="text-github-gray">March 15, 2013</span>
+                                </div>
+                                <div class="text-github-gray mb-2">Jordan Walke</div>
+                                <div class="text-gray-900">Add initial JSX transformer and syntax support</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="font-medium text-gray-900 mb-2">AI Analysis</h4>
+                            <div class="prose max-w-none">
+                                <p class="text-github-gray">
+                                    This commit introduces JSX (JavaScript XML) syntax to React, allowing developers
+                                    to write HTML-like syntax within JavaScript. The change was motivated by the need
+                                    to make React components more readable and maintainable compared to verbose
+                                    React.createElement calls.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="font-medium text-gray-900 mb-2">Code Changes</h4>
+                            <div class="bg-gray-50 rounded-lg p-4 font-mono text-sm">
+                                <div class="text-github-success">+ // Before: React.createElement('div', null, 'Hello World')</div>
+                                <div class="text-github-success">+ // After: &lt;div&gt;Hello World&lt;/div&gt;</div>
+                                <div class="text-github-error">- React.createElement('h1', {className: 'title'}, this.props.title)</div>
+                                <div class="text-github-success">+ &lt;h1 className="title"&gt;{this.props.title}&lt;/h1&gt;</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: Detailed Analysis Modal -->
+
+    </div>
+
+    <script>
+        (function() {
+            // TODO: Implement business logic, API calls, and state management
+            
+            // Mock state management
+            let currentView = 'input'; // input | progress | dashboard
+            let analysisProgress = 0;
+            
+            // Mock function to simulate analysis progress
+            function simulateAnalysis() {
+                document.getElementById('inputSection').classList.add('hidden');
+                document.getElementById('progressSection').classList.remove('hidden');
+                
+                // Simulate progress updates
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += Math.random() * 10;
+                    if (progress >= 100) {
+                        progress = 100;
+                        clearInterval(interval);
+                        
+                        // Show dashboard after completion
+                        setTimeout(() => {
+                            document.getElementById('progressSection').classList.add('hidden');
+                            document.getElementById('dashboardSection').classList.remove('hidden');
+                        }, 1000);
+                    }
+                    
+                    // Update progress UI elements
+                    // TODO: Implement real progress updates
+                }, 1000);
+            }
+            
+            // Event listener setup (mock)
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('[data-event*="startAnalysis"]')) {
+                    e.preventDefault();
+                    simulateAnalysis();
+                }
+                
+                if (e.target.closest('[data-event*="submitQuery"]')) {
+                    e.preventDefault();
+                    // TODO: Implement query submission
+                    console.log('Query submitted');
+                }
+                
+                if (e.target.closest('[data-event*="fillQuery"]')) {
+                    const queryText = e.target.textContent.replace(/"/g, '');
+                    const textarea = document.querySelector('textarea');
+                    if (textarea) {
+                        textarea.value = queryText;
+                    }
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

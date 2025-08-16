@@ -14,10 +14,6 @@ When copying code from this code snippet, ensure you also include this informati
 const DEFAULT_MODEL_STR = "claude-sonnet-4-20250514";
 // </important_do_not_delete>
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
-
 interface AnalyzedChange {
   title: string;
   description: string;
@@ -36,6 +32,14 @@ interface QueryResponse {
 }
 
 export class AIAnalyzer {
+  private anthropic: Anthropic;
+
+  constructor() {
+    this.anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    });
+  }
+
   private cleanJsonResponse(text: string): string {
     // Remove markdown code block markers if present
     let cleaned = text.trim();
@@ -150,7 +154,7 @@ Return JSON with this format:
 `;
 
     try {
-      const response = await anthropic.messages.create({
+      const response = await this.anthropic.messages.create({
         // "claude-sonnet-4-20250514"
         model: DEFAULT_MODEL_STR,
         max_tokens: 4000,
@@ -249,7 +253,7 @@ Return your response in JSON format:
 `;
 
     try {
-      const response = await anthropic.messages.create({
+      const response = await this.anthropic.messages.create({
         // "claude-sonnet-4-20250514"
         model: DEFAULT_MODEL_STR,
         max_tokens: 3000,

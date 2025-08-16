@@ -7,7 +7,6 @@ import { insertRepositorySchema, insertQuerySchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const gitAnalyzer = new GitAnalyzer();
-  const aiAnalyzer = new AIAnalyzer();
 
   // Get all repositories
   app.get("/api/repositories", async (req, res) => {
@@ -129,6 +128,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Get AI answer
+      const aiAnalyzer = new AIAnalyzer();
       const queryResponse = await aiAnalyzer.answerQuery(req.params.id, validatedData.question);
       
       // Store query and response
@@ -230,6 +230,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`About to retrieve commits for repository: ${repositoryId}`);
       const dbCommits = await storage.getCommitsByRepository(repositoryId);
       console.log(`Retrieved ${dbCommits.length} commits from database`);
+      const aiAnalyzer = new AIAnalyzer();
       await aiAnalyzer.analyzeCommitBatches(repositoryId, dbCommits);
 
       // Get final change events count
