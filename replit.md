@@ -36,14 +36,14 @@ The server is built on Node.js with Express, designed for scalability and real-t
 ## Data Storage Solutions
 The application uses a flexible storage architecture:
 
-- **Primary Database**: PostgreSQL with Drizzle ORM for type-safe database operations
-- **Database Provider**: Neon serverless PostgreSQL for production deployments
-- **Schema Management**: Drizzle Kit for migrations and schema management
+- **Primary Database**: MongoDB with Mongoose ODM for type-safe database operations
+- **Database Provider**: MongoDB Atlas for cloud deployments or local MongoDB for development
+- **Schema Management**: Mongoose schemas with automatic collection creation
 - **Fallback Storage**: In-memory storage implementation for development and testing
 
 ### Data Models
-- **Repositories**: Stores repository metadata, analysis status, and statistical summaries
-- **Commits**: Individual commit records with metadata, author information, change metrics, file paths, file types, and semantic change categorization
+- **Repositories**: MongoDB documents storing repository metadata, analysis status, and statistical summaries with ObjectId identifiers
+- **Commits**: Individual commit documents with metadata, author information, change metrics, embedded file paths, file types, and semantic change categorization arrays
 - **Change Events**: AI-analyzed groups of related commits representing semantic changes with business rationale and impact analysis
 - **Queries**: User questions and AI-generated responses with related context and confidence scores
 

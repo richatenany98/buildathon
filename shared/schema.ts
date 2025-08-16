@@ -1,77 +1,149 @@
-import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, json, integer } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
+import mongoose, { Schema, Document } from 'mongoose';
 import { z } from "zod";
 
-export const repositories = pgTable("repositories", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  url: text("url").notNull(),
-  name: text("name").notNull(),
-  description: text("description"),
-  defaultRef: text("default_ref").notNull().default("refs/heads/main"),
-  cloneProtocol: text("clone_protocol").notNull().default("https"),
-  analysisStatus: text("analysis_status").notNull().default("queued"), // queued | cloning | analyzing | completed | failed
-  createdAt: timestamp("created_at").notNull().default(sql`now()`),
-  lastAnalyzedAt: timestamp("last_analyzed_at"),
-  commitCount: integer("commit_count").default(0),
-  contributorCount: integer("contributor_count").default(0),
-  fileCount: integer("file_count").default(0),
-  changeEventCount: integer("change_event_count").default(0),
-  majorFeatureCount: integer("major_feature_count").default(0),
-  confidenceScore: integer("confidence_score").default(0),
+// MongoDB Schema Definitions
+export interface Repository extends Document {
+  _id: string;
+  url: string;
+  name: string;
+  description?: string;
+  defaultRef: string;
+  cloneProtocol: string;
+  analysisStatus: 'queued' | 'cloning' | 'analyzing' | 'completed' | 'failed';
+  createdAt: Date;
+  lastAnalyzedAt?: Date;
+  commitCount: number;
+  contributorCount: number;
+  fileCount: number;
+  changeEventCount: number;
+  majorFeatureCount: number;
+  confidenceScore: number;
+}
+
+export interface Commit extends Document {
+  _id: string;
+  repositoryId: string;
+  sha: string;
+  message: string;
+  author: string;
+  authorEmail: string;
+  timestamp: Date;
+  filesChanged: number;
+  linesAdded: number;
+  linesRemoved: number;
+  filePaths: string[];
+  fileTypes: string[];
+  changeTypes: string[];
+}
+
+export interface ChangeEvent extends Document {
+  _id: string;
+  repositoryId: string;
+  title: string;
+  description: string;
+  category: 'new_feature' | 'enhancement' | 'bug_fix' | 'refactoring' | 'optimization';
+  timestamp: Date;
+  commitShas: string[];
+  filesAffected: string[];
+  rationale?: string;
+  businessImpact?: string;
+}
+
+export interface Query extends Document {
+  _id: string;
+  repositoryId: string;
+  question: string;
+  answer: string;
+  relatedCommits: string[];
+  relatedEvents: string[];
+  createdAt: Date;
+}
+
+// Mongoose Schemas
+const repositorySchema = new Schema<Repository>({
+  url: { type: String, required: true },
+  name: { type: String, required: true },
+  description: { type: String },
+  defaultRef: { type: String, required: true, default: "refs/heads/main" },
+  cloneProtocol: { type: String, required: true, default: "https" },
+  analysisStatus: { 
+    type: String, 
+    required: true, 
+    default: "queued",
+    enum: ['queued', 'cloning', 'analyzing', 'completed', 'failed']
+  },
+  createdAt: { type: Date, default: Date.now },
+  lastAnalyzedAt: { type: Date },
+  commitCount: { type: Number, default: 0 },
+  contributorCount: { type: Number, default: 0 },
+  fileCount: { type: Number, default: 0 },
+  changeEventCount: { type: Number, default: 0 },
+  majorFeatureCount: { type: Number, default: 0 },
+  confidenceScore: { type: Number, default: 0 },
 });
 
-export const commits = pgTable("commits", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  repositoryId: varchar("repository_id").references(() => repositories.id).notNull(),
-  sha: text("sha").notNull(),
-  message: text("message").notNull(),
-  author: text("author").notNull(),
-  authorEmail: text("author_email").notNull(),
-  timestamp: timestamp("timestamp").notNull(),
-  filesChanged: integer("files_changed").default(0),
-  linesAdded: integer("lines_added").default(0),
-  linesRemoved: integer("lines_removed").default(0),
-  filePaths: json("file_paths").$type<string[]>().default([]),
-  fileTypes: json("file_types").$type<string[]>().default([]),
-  changeTypes: json("change_types").$type<string[]>().default([]),
+const commitSchema = new Schema<Commit>({
+  repositoryId: { type: String, required: true },
+  sha: { type: String, required: true },
+  message: { type: String, required: true },
+  author: { type: String, required: true },
+  authorEmail: { type: String, required: true },
+  timestamp: { type: Date, required: true },
+  filesChanged: { type: Number, default: 0 },
+  linesAdded: { type: Number, default: 0 },
+  linesRemoved: { type: Number, default: 0 },
+  filePaths: { type: [String], default: [] },
+  fileTypes: { type: [String], default: [] },
+  changeTypes: { type: [String], default: [] },
 });
 
-export const changeEvents = pgTable("change_events", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  repositoryId: varchar("repository_id").references(() => repositories.id).notNull(),
-  title: text("title").notNull(),
-  description: text("description").notNull(),
-  category: text("category").notNull(), // new_feature | enhancement | bug_fix | refactoring | optimization
-  timestamp: timestamp("timestamp").notNull(),
-  commitShas: json("commit_shas").$type<string[]>().notNull(),
-  filesAffected: json("files_affected").$type<string[]>().notNull(),
-  rationale: text("rationale"),
-  businessImpact: text("business_impact"),
+const changeEventSchema = new Schema<ChangeEvent>({
+  repositoryId: { type: String, required: true },
+  title: { type: String, required: true },
+  description: { type: String, required: true },
+  category: { 
+    type: String, 
+    required: true,
+    enum: ['new_feature', 'enhancement', 'bug_fix', 'refactoring', 'optimization']
+  },
+  timestamp: { type: Date, required: true },
+  commitShas: { type: [String], required: true },
+  filesAffected: { type: [String], required: true },
+  rationale: { type: String },
+  businessImpact: { type: String },
 });
 
-export const queries = pgTable("queries", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  repositoryId: varchar("repository_id").references(() => repositories.id).notNull(),
-  question: text("question").notNull(),
-  answer: text("answer").notNull(),
-  relatedCommits: json("related_commits").$type<string[]>().notNull(),
-  relatedEvents: json("related_events").$type<string[]>().notNull(),
-  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+const querySchema = new Schema<Query>({
+  repositoryId: { type: String, required: true },
+  question: { type: String, required: true },
+  answer: { type: String, required: true },
+  relatedCommits: { type: [String], required: true },
+  relatedEvents: { type: [String], required: true },
+  createdAt: { type: Date, default: Date.now },
 });
 
-export const insertRepositorySchema = createInsertSchema(repositories).pick({
-  url: true,
-  name: true,
-  description: true,
-  defaultRef: true,
-  cloneProtocol: true,
+// Export Models
+export const RepositoryModel = mongoose.model<Repository>('Repository', repositorySchema);
+export const CommitModel = mongoose.model<Commit>('Commit', commitSchema);
+export const ChangeEventModel = mongoose.model<ChangeEvent>('ChangeEvent', changeEventSchema);
+export const QueryModel = mongoose.model<Query>('Query', querySchema);
+
+// Zod validation schemas
+export const insertRepositorySchema = z.object({
+  url: z.string().url(),
+  name: z.string(),
+  description: z.string().optional(),
+  defaultRef: z.string().default("refs/heads/main"),
+  cloneProtocol: z.enum(["https", "ssh"]).default("https"),
 });
 
-export const insertQuerySchema = createInsertSchema(queries).pick({
-  repositoryId: true,
-  question: true,
+export const insertQuerySchema = z.object({
+  repositoryId: z.string(),
+  question: z.string(),
 });
+
+export type InsertRepository = z.infer<typeof insertRepositorySchema>;
+export type InsertQuery = z.infer<typeof insertQuerySchema>;
 
 export type Repository = typeof repositories.$inferSelect;
 export type InsertRepository = z.infer<typeof insertRepositorySchema>;

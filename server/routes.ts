@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { storage } from "./storage-mongo";
 import { GitAnalyzer } from "./services/git-analyzer";
 import { AIAnalyzer } from "./services/ai-analyzer";
 import { insertRepositorySchema, insertQuerySchema } from "@shared/schema";
@@ -15,7 +15,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const repositories = await storage.getAllRepositories();
       res.json(repositories);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: (error as Error).message });
     }
   });
 
@@ -28,7 +28,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       res.json(repository);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: (error as Error).message });
     }
   });
 
@@ -79,7 +79,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Start analysis in background
       analyzeRepositoryBackground(repository.id);
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      res.status(400).json({ error: (error as Error).message });
     }
   });
 
@@ -101,7 +101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         progress: getAnalysisProgress(repository.analysisStatus, commits.length),
       });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: (error as Error).message });
     }
   });
 
@@ -138,7 +138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         confidence: queryResponse.confidence,
       });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: (error as Error).message });
     }
   });
 
@@ -148,7 +148,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const queries = await storage.getQueriesByRepository(req.params.id);
       res.json(queries);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: (error as Error).message });
     }
   });
 
@@ -158,7 +158,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const events = await storage.getChangeEventsByRepository(req.params.id);
       res.json(events);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: (error as Error).message });
     }
   });
 
@@ -168,7 +168,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const commits = await storage.getCommitsByRepository(req.params.id);
       res.json(commits);
     } catch (error) {
-      res.status(500).json({ error: error.message });
+      res.status(500).json({ error: (error as Error).message });
     }
   });
 
@@ -249,15 +249,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Analysis completed for repository ${repositoryId}`);
     } catch (error) {
-      console.error(`Analysis failed for repository ${repositoryId}:`, error);
-      console.error(`Error stack:`, error.stack);
+      console.error(`Analysis failed for repository ${repositoryId}:`, (error as Error).message);
+      console.error(`Error stack:`, (error as Error).stack);
       
       // Get repository info for debugging
       try {
         const repository = await storage.getRepository(repositoryId);
         console.error(`Failed repository data:`, JSON.stringify(repository, null, 2));
       } catch (dbError) {
-        console.error(`Could not retrieve repository data:`, dbError);
+        console.error(`Could not retrieve repository data:`, (dbError as Error).message);
       }
       
       await storage.updateRepository(repositoryId, { analysisStatus: "failed" });

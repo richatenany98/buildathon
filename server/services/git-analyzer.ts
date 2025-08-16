@@ -52,7 +52,7 @@ export class GitAnalyzer {
       
       // Clone repository with full history - ensure we get ALL commits
       this.git = simpleGit({
-        binary: '/nix/store/1yj5z39xwiram4s0dm1i2ldpw4cbmwa6-replit-runtime-path/bin/git'
+        binary: 'git'
       });
       console.log(`Cloning URL: "${repo.url}" to directory: ${tempDir}`);
       console.log(`Repository data:`, JSON.stringify(repo, null, 2));
@@ -63,7 +63,7 @@ export class GitAnalyzer {
       // Switch to cloned repository
       this.git = simpleGit({
         baseDir: tempDir,
-        binary: '/nix/store/1yj5z39xwiram4s0dm1i2ldpw4cbmwa6-replit-runtime-path/bin/git'
+        binary: 'git'
       });
       this.repoPath = tempDir;
       
