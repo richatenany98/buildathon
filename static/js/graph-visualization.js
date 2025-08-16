@@ -123,22 +123,47 @@ class GraphVisualization {
                 d.fy = d.y;
                 
                 // Add dragging class for visual feedback
-                d3.select(event.sourceEvent.target).classed('dragging', true);
+                d3.select(event.sourceEvent.target)
+                    .classed('dragging', true)
+                    .style('cursor', 'grabbing');
+                
+                // Bring dragged node to front
+                d3.select(event.sourceEvent.target).raise();
+                
+                // Highlight connected edges during drag
+                this.highlightConnectedElements(d, true);
             })
             .on('drag', (event, d) => {
                 d.fx = event.x;
                 d.fy = event.y;
+                
+                // Update node position immediately
+                d3.select(event.sourceEvent.target)
+                    .attr('cx', d.fx)
+                    .attr('cy', d.fy);
+                
+                // Update label position immediately to keep it stuck to the node
+                if (this.labelElements) {
+                    this.labelElements
+                        .filter(labelData => labelData.id === d.id)
+                        .attr('x', d.fx)
+                        .attr('y', d.fy);
+                }
             })
             .on('end', (event, d) => {
                 if (!event.active) this.simulation.alphaTarget(0);
                 
-                // Keep nodes fixed after dragging (user positioning)
-                // Remove the lines below if you want nodes to float freely after dragging
-                // d.fx = null;
-                // d.fy = null;
+                // Allow nodes to float freely after dragging for natural behavior
+                d.fx = null;
+                d.fy = null;
                 
-                // Remove dragging class
-                d3.select(event.sourceEvent.target).classed('dragging', false);
+                // Remove dragging visual feedback
+                d3.select(event.sourceEvent.target)
+                    .classed('dragging', false)
+                    .style('cursor', 'pointer');
+                
+                // Remove highlight from connected elements
+                this.highlightConnectedElements(d, false);
             });
     }
 
@@ -241,14 +266,18 @@ class GraphVisualization {
             .style('font-size', '11px')
             .style('fill', '#ffffff')
             .style('text-anchor', 'middle')
-            .style('dominant-baseline', 'central');
+            .style('dominant-baseline', 'central')
+            .style('font-weight', '500')
+            .style('text-shadow', '1px 1px 2px rgba(0, 0, 0, 0.8)');
 
         // Merge enter and update selections
         this.labelElements = labelEnter.merge(this.labelElements);
 
-        // Update label text
+        // Update label text and position
         this.labelElements
-            .text(d => this.truncateLabel(d.label || d.id, 15));
+            .text(d => this.truncateLabel(d.label || d.id, 15))
+            .attr('x', d => d.x || 0)
+            .attr('y', d => d.y || 0);
 
         // Update simulation with new data
         this.simulation.nodes(this.graphData.nodes);
@@ -277,11 +306,63 @@ class GraphVisualization {
                 .attr('cy', d => d.y);
         }
 
-        // Update label positions
+        // Update label positions - always keep them perfectly centered on nodes
         if (this.labelElements) {
             this.labelElements
                 .attr('x', d => d.x)
                 .attr('y', d => d.y);
+        }
+    }
+    
+    updateLabelPosition(node) {
+        // Update specific node's label position immediately during drag
+        if (this.labelElements) {
+            this.labelElements
+                .filter(d => d.id === node.id)
+                .attr('x', node.x)
+                .attr('y', node.y);
+        }
+    }
+    
+    highlightConnectedElements(node, highlight) {
+        if (!this.linkElements) return;
+        
+        if (highlight) {
+            // Highlight connected edges and nodes with transitions
+            this.linkElements
+                .transition()
+                .duration(100)
+                .style('opacity', d => 
+                    (d.source.id === node.id || d.target.id === node.id) ? 0.9 : 0.15
+                )
+                .style('stroke-width', d => 
+                    (d.source.id === node.id || d.target.id === node.id) ? 3 : 1.5
+                );
+                
+            this.nodeElements
+                .filter(d => d.id !== node.id)  // Don't affect the dragged node
+                .transition()
+                .duration(100)
+                .style('opacity', d => {
+                    // Check if this node is connected to the dragged node
+                    const isConnected = this.graphData.edges.some(edge => 
+                        (edge.source.id === node.id && edge.target.id === d.id) ||
+                        (edge.target.id === node.id && edge.source.id === d.id)
+                    );
+                    return isConnected ? 0.8 : 0.2;
+                });
+        } else {
+            // Reset all elements smoothly
+            this.linkElements
+                .transition()
+                .duration(200)
+                .style('opacity', 0.6)
+                .style('stroke-width', 1.5);
+                
+            this.nodeElements
+                .transition()
+                .duration(200)
+                .style('opacity', 1);
         }
     }
 
@@ -305,66 +386,151 @@ class GraphVisualization {
     handleNodeHover(event, nodeData, isEntering) {
         const node = d3.select(event.target);
         
+        // Prevent hover effects during dragging
+        if (node.classed('dragging')) {
+            return;
+        }
+        
+        // Clear any existing hover states first
         if (isEntering) {
-            // Highlight node and connected edges
-            node.style('stroke-width', '3px');
+            this.clearHoverStates();
+        }
+        
+        if (isEntering) {
+            // Add hover class for CSS styling
+            node.classed('hovering', true);
             
-            // Highlight connected edges
-            this.linkElements
-                .style('opacity', d => 
-                    (d.source.id === nodeData.id || d.target.id === nodeData.id) ? 0.9 : 0.3
-                )
-                .style('stroke-width', d => 
-                    (d.source.id === nodeData.id || d.target.id === nodeData.id) ? 3 : 1.5
-                );
+            // Highlight connected edges without transitions to prevent glitching
+            if (this.linkElements) {
+                this.linkElements
+                    .style('opacity', d => 
+                        (d.source.id === nodeData.id || d.target.id === nodeData.id) ? 0.9 : 0.2
+                    )
+                    .style('stroke-width', d => 
+                        (d.source.id === nodeData.id || d.target.id === nodeData.id) ? 3 : 1.5
+                    );
+            }
+            
+            // Highlight connected nodes
+            if (this.nodeElements) {
+                this.nodeElements
+                    .style('opacity', d => {
+                        if (d.id === nodeData.id) return 1;
+                        // Check if connected
+                        const isConnected = this.graphData.edges.some(edge => 
+                            (edge.source.id === nodeData.id && edge.target.id === d.id) ||
+                            (edge.target.id === nodeData.id && edge.source.id === d.id)
+                        );
+                        return isConnected ? 0.8 : 0.3;
+                    });
+            }
+            
+            // Ensure labels stay visible and properly positioned
+            if (this.labelElements) {
+                this.labelElements
+                    .style('opacity', d => {
+                        if (d.id === nodeData.id) return 1;
+                        const isConnected = this.graphData.edges.some(edge => 
+                            (edge.source.id === nodeData.id && edge.target.id === d.id) ||
+                            (edge.target.id === nodeData.id && edge.source.id === d.id)
+                        );
+                        return isConnected ? 0.9 : 0.4;
+                    });
+            }
                 
             // Show tooltip
             this.showTooltip(event, nodeData);
         } else {
-            // Reset node appearance
-            node.style('stroke-width', null);
+            // Remove hover class
+            node.classed('hovering', false);
             
-            // Reset edge appearance
-            this.linkElements
-                .style('opacity', 0.6)
-                .style('stroke-width', 1.5);
+            // Reset all elements
+            this.resetHoverStates();
                 
             // Hide tooltip
             this.hideTooltip();
         }
     }
+    
+    clearHoverStates() {
+        // Remove all existing hover classes
+        if (this.nodeElements) {
+            this.nodeElements.classed('hovering', false);
+        }
+    }
+    
+    resetHoverStates() {
+        // Reset all elements to default state
+        if (this.linkElements) {
+            this.linkElements
+                .style('opacity', 0.6)
+                .style('stroke-width', 1.5);
+        }
+        
+        if (this.nodeElements) {
+            this.nodeElements
+                .style('opacity', 1);
+        }
+        
+        if (this.labelElements) {
+            this.labelElements
+                .style('opacity', 1);
+        }
+    }
 
     showTooltip(event, nodeData) {
-        // Simple tooltip implementation
+        // Remove any existing tooltips first to prevent conflicts
+        this.hideTooltip();
+        
+        // Create improved tooltip
         const tooltip = d3.select('body').append('div')
             .attr('class', 'graph-tooltip')
             .style('position', 'absolute')
-            .style('background', 'rgba(0, 0, 0, 0.8)')
+            .style('background', 'rgba(0, 0, 0, 0.9)')
             .style('color', 'white')
-            .style('padding', '8px')
-            .style('border-radius', '4px')
+            .style('padding', '8px 12px')
+            .style('border-radius', '6px')
             .style('font-size', '12px')
             .style('pointer-events', 'none')
-            .style('z-index', '1000')
+            .style('z-index', '10000')
+            .style('box-shadow', '0 4px 12px rgba(0, 0, 0, 0.3)')
+            .style('backdrop-filter', 'blur(10px)')
+            .style('border', '1px solid rgba(255, 255, 255, 0.1)')
             .html(`
-                <strong>${nodeData.label || nodeData.id}</strong><br>
-                Type: ${nodeData.type}<br>
-                ${nodeData.entity_label ? `Entity: ${nodeData.entity_label}` : ''}
-            `)
-            .style('left', (event.pageX + 10) + 'px')
-            .style('top', (event.pageY - 10) + 'px')
+                <div style="font-weight: 600; margin-bottom: 4px;">${nodeData.label || nodeData.id}</div>
+                <div style="font-size: 10px; opacity: 0.8;">Type: ${nodeData.type}</div>
+                ${nodeData.entity_label ? `<div style="font-size: 10px; opacity: 0.8;">Entity: ${nodeData.entity_label}</div>` : ''}
+            `);
+        
+        // Smart positioning to avoid going off screen
+        const tooltipNode = tooltip.node();
+        const rect = tooltipNode.getBoundingClientRect();
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        
+        let left = event.pageX + 10;
+        let top = event.pageY - 10;
+        
+        // Adjust if tooltip would go off screen
+        if (left + rect.width > windowWidth) {
+            left = event.pageX - rect.width - 10;
+        }
+        if (top + rect.height > windowHeight) {
+            top = event.pageY - rect.height - 10;
+        }
+        
+        tooltip
+            .style('left', left + 'px')
+            .style('top', top + 'px')
             .style('opacity', 0)
             .transition()
-            .duration(200)
+            .duration(150)
             .style('opacity', 1);
     }
 
     hideTooltip() {
-        d3.selectAll('.graph-tooltip')
-            .transition()
-            .duration(200)
-            .style('opacity', 0)
-            .remove();
+        // Immediately remove tooltips without transition to prevent conflicts
+        d3.selectAll('.graph-tooltip').remove();
     }
 
     highlightEvidence(evidence) {
