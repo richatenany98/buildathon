@@ -77,9 +77,10 @@ export class GitAnalyzer {
       
       const commits: CommitInfo[] = [];
       
+      console.log(`Processing ${log.all.length} commits from Git log`);
+      
       for (const commit of log.all) {
         try {
-          let diffSummary;
           let filePaths: string[] = [];
           let filesChanged = 0;
           let linesAdded = 0;
@@ -87,7 +88,7 @@ export class GitAnalyzer {
 
           try {
             // Get detailed commit info with stats
-            diffSummary = await this.git.diffSummary([`${commit.hash}^`, commit.hash]);
+            const diffSummary = await this.git.diffSummary([`${commit.hash}^`, commit.hash]);
             filePaths = diffSummary.files.map(file => file.file);
             filesChanged = diffSummary.files.length;
             linesAdded = diffSummary.insertions;
@@ -102,7 +103,7 @@ export class GitAnalyzer {
               linesAdded = 0; // Can't calculate for initial commits
               linesRemoved = 0;
             } catch (showError) {
-              console.warn(`Could not get file info for commit ${commit.hash}: ${showError.message}`);
+              console.warn(`Could not get file info for commit ${commit.hash.substring(0,8)}: ${showError.message}`);
               // Still include the commit with basic info
               filePaths = [];
               filesChanged = 0;
@@ -120,11 +121,13 @@ export class GitAnalyzer {
           // Determine change types based on file patterns
           const changeTypes = this.categorizeChanges(filePaths, commit.message);
           
+          console.log(`Processing commit ${commit.hash.substring(0,8)}: "${commit.message.substring(0,50)}..." (${filesChanged} files)`);
+          
           commits.push({
             sha: commit.hash,
             message: commit.message,
-            author: commit.author_name,
-            authorEmail: commit.author_email,
+            author: commit.author_name || 'Unknown',
+            authorEmail: commit.author_email || 'unknown@email.com',
             timestamp: new Date(commit.date),
             filesChanged,
             linesAdded,
@@ -134,7 +137,14 @@ export class GitAnalyzer {
             changeTypes,
           });
         } catch (error) {
-          console.warn(`Skipping commit ${commit.hash}: ${error.message}`);
+          console.error(`Failed to process commit ${commit.hash.substring(0,8)}: ${error.message}`);
+          console.error('Commit data:', {
+            hash: commit.hash,
+            message: commit.message,
+            author_name: commit.author_name,
+            author_email: commit.author_email,
+            date: commit.date
+          });
         }
       }
 
