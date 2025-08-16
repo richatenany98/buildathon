@@ -1,0 +1,129 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(222, 84%, 4.9%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(222, 84%, 4.9%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(222, 84%, 4.9%);
+  --primary: hsl(203.8863, 88.2845%, 53.1373%);
+  --primary-foreground: hsl(210, 40%, 98%);
+  --secondary: hsl(210, 40%, 96%);
+  --secondary-foreground: hsl(222, 84%, 4.9%);
+  --muted: hsl(210, 40%, 96%);
+  --muted-foreground: hsl(215.4, 16.3%, 46.9%);
+  --accent: hsl(210, 40%, 96%);
+  --accent-foreground: hsl(222, 84%, 4.9%);
+  --destructive: hsl(0, 84.2%, 60.2%);
+  --destructive-foreground: hsl(210, 40%, 98%);
+  --border: hsl(214.3, 31.8%, 91.4%);
+  --input: hsl(214.3, 31.8%, 91.4%);
+  --ring: hsl(203.8863, 88.2845%, 53.1373%);
+  --chart-1: hsl(12, 76%, 61%);
+  --chart-2: hsl(173, 58%, 39%);
+  --chart-3: hsl(197, 37%, 24%);
+  --chart-4: hsl(43, 74%, 66%);
+  --chart-5: hsl(27, 87%, 67%);
+  --radius: 0.5rem;
+  
+  /* GitHub-style colors */
+  --github-blue: hsl(212, 92%, 43%);
+  --github-gray: hsl(213, 13%, 44%);
+  --github-success: hsl(130, 61%, 35%);
+  --github-warning: hsl(35, 100%, 50%);
+  --github-error: hsl(349, 82%, 48%);
+  --github-bg: hsl(210, 17%, 97%);
+  --github-border: hsl(210, 18%, 87%);
+}
+
+.dark {
+  --background: hsl(222, 84%, 4.9%);
+  --foreground: hsl(210, 40%, 98%);
+  --card: hsl(222, 84%, 4.9%);
+  --card-foreground: hsl(210, 40%, 98%);
+  --popover: hsl(222, 84%, 4.9%);
+  --popover-foreground: hsl(210, 40%, 98%);
+  --primary: hsl(203.8863, 88.2845%, 53.1373%);
+  --primary-foreground: hsl(222, 84%, 4.9%);
+  --secondary: hsl(217, 32.6%, 17.5%);
+  --secondary-foreground: hsl(210, 40%, 98%);
+  --muted: hsl(217, 32.6%, 17.5%);
+  --muted-foreground: hsl(215, 20.2%, 65.1%);
+  --accent: hsl(217, 32.6%, 17.5%);
+  --accent-foreground: hsl(210, 40%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(210, 40%, 98%);
+  --border: hsl(217, 32.6%, 17.5%);
+  --input: hsl(217, 32.6%, 17.5%);
+  --ring: hsl(203.8863, 88.2845%, 53.1373%);
+  --chart-1: hsl(220, 70%, 50%);
+  --chart-2: hsl(160, 60%, 45%);
+  --chart-3: hsl(30, 80%, 55%);
+  --chart-4: hsl(280, 65%, 60%);
+  --chart-5: hsl(340, 75%, 55%);
+  
+  /* GitHub-style colors for dark mode */
+  --github-blue: hsl(213, 93%, 58%);
+  --github-gray: hsl(213, 13%, 65%);
+  --github-success: hsl(130, 61%, 45%);
+  --github-warning: hsl(35, 100%, 60%);
+  --github-error: hsl(349, 82%, 58%);
+  --github-bg: hsl(220, 13%, 18%);
+  --github-border: hsl(217, 19%, 27%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+@layer utilities {
+  .text-github-blue {
+    color: var(--github-blue);
+  }
+  .text-github-gray {
+    color: var(--github-gray);
+  }
+  .text-github-success {
+    color: var(--github-success);
+  }
+  .text-github-warning {
+    color: var(--github-warning);
+  }
+  .text-github-error {
+    color: var(--github-error);
+  }
+  .bg-github-blue {
+    background-color: var(--github-blue);
+  }
+  .bg-github-gray {
+    background-color: var(--github-gray);
+  }
+  .bg-github-success {
+    background-color: var(--github-success);
+  }
+  .bg-github-warning {
+    background-color: var(--github-warning);
+  }
+  .bg-github-error {
+    background-color: var(--github-error);
+  }
+  .bg-github-bg {
+    background-color: var(--github-bg);
+  }
+  .border-github-border {
+    border-color: var(--github-border);
+  }
+  .font-mono {
+    font-family: 'Fira Code', monospace;
+  }
+}
