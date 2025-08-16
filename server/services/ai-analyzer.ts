@@ -123,20 +123,25 @@ export class AIAnalyzer {
     }));
 
     const prompt = `
-Analyze these commits and group them into logical changes. Be concise and fast.
+Analyze these commits and group them into logical business changes. Focus on WHY changes were made and their business value.
 
 Commits:
 ${JSON.stringify(commitSummaries, null, 2)}
+
+For each change, link commits to specific business features/decisions by explaining:
+- What business problem was solved
+- What user value was created
+- How this enables business goals
 
 Return JSON with this format:
 {
   "changes": [
     {
-      "title": "Brief title of what was changed",
-      "description": "What was built and why",
+      "title": "Business-focused title explaining the purpose",
+      "description": "What was built and the business reason why",
       "category": "new_feature|enhancement|bug_fix|refactoring|optimization",
-      "rationale": "Why this change was needed",
-      "businessImpact": "Benefits to users or business",
+      "rationale": "Business problem this solves or opportunity it creates",
+      "businessImpact": "Specific benefits to users, revenue, or operations",
       "commitShas": ["sha1", "sha2"],
       "filesAffected": ["file1.js", "file2.js"]
     }

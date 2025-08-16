@@ -10,10 +10,10 @@ interface TimelineVisualizationProps {
 
 const getCategoryColor = (category: string) => {
   switch (category) {
-    case "new_feature": return "bg-github-success";
-    case "enhancement": return "bg-github-blue";
-    case "bug_fix": return "bg-github-error";
-    case "refactoring": return "bg-github-warning";
+    case "new_feature": return "bg-green-500";
+    case "enhancement": return "bg-blue-500"; 
+    case "bug_fix": return "bg-red-500";
+    case "refactoring": return "bg-orange-500";
     case "optimization": return "bg-purple-500";
     default: return "bg-gray-500";
   }
@@ -22,7 +22,7 @@ const getCategoryColor = (category: string) => {
 const getCategoryBadgeVariant = (category: string) => {
   switch (category) {
     case "new_feature": return "default";
-    case "enhancement": return "secondary";
+    case "enhancement": return "secondary"; 
     case "bug_fix": return "destructive";
     case "refactoring": return "outline";
     case "optimization": return "secondary";

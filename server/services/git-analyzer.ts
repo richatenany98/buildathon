@@ -98,14 +98,14 @@ export class GitAnalyzer {
       // Try getting commits from the current branch first, then all branches
       let log: LogResult;
       try {
-        // Get full commit information without --oneline to get complete data
-        log = await this.git.log(['--no-merges']);
+        // Get full commit information - include ALL commits
+        log = await this.git.log([]);
         console.log(`Found ${log.all.length} commits on current branch`);
         
         // If we only get 1 commit, try getting from all branches/refs
         if (log.all.length <= 1) {
           console.log('Trying to get commits from all refs...');
-          log = await this.git.log(['--all', '--no-merges']);
+          log = await this.git.log(['--all']);
           console.log(`Found ${log.all.length} commits across all refs`);
         }
       } catch (error) {
