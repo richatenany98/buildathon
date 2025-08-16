@@ -196,7 +196,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   async function analyzeRepositoryBackground(repositoryId: string) {
     try {
       const repository = await storage.getRepository(repositoryId);
-      if (!repository) return;
+      if (!repository) {
+        console.error(`Repository not found: ${repositoryId}`);
+        return;
+      }
+
+      console.log(`Starting analysis for repository:`, JSON.stringify(repository, null, 2));
 
       // Update status to cloning
       await storage.updateRepository(repositoryId, { analysisStatus: "cloning" });
@@ -245,6 +250,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Analysis completed for repository ${repositoryId}`);
     } catch (error) {
       console.error(`Analysis failed for repository ${repositoryId}:`, error);
+      console.error(`Error stack:`, error.stack);
+      
+      // Get repository info for debugging
+      try {
+        const repository = await storage.getRepository(repositoryId);
+        console.error(`Failed repository data:`, JSON.stringify(repository, null, 2));
+      } catch (dbError) {
+        console.error(`Could not retrieve repository data:`, dbError);
+      }
+      
       await storage.updateRepository(repositoryId, { analysisStatus: "failed" });
       await gitAnalyzer.cleanup();
     }

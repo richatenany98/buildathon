@@ -28,6 +28,14 @@ export class GitAnalyzer {
   }
 
   async cloneRepository(repo: Repository): Promise<string> {
+    // Validate repository data
+    if (!repo.url || repo.url.trim() === '') {
+      throw new Error('Repository URL is empty or invalid');
+    }
+    if (!repo.id || repo.id.trim() === '') {
+      throw new Error('Repository ID is empty or invalid');
+    }
+    
     const baseDir = path.join(tmpdir(), 'codebase-analysis');
     const tempDir = path.join(baseDir, repo.id);
     
@@ -46,7 +54,8 @@ export class GitAnalyzer {
       this.git = simpleGit({
         binary: '/nix/store/1yj5z39xwiram4s0dm1i2ldpw4cbmwa6-replit-runtime-path/bin/git'
       });
-      console.log(`Cloning ${repo.url} to ${tempDir}`);
+      console.log(`Cloning URL: "${repo.url}" to directory: ${tempDir}`);
+      console.log(`Repository data:`, JSON.stringify(repo, null, 2));
       
       // Clone with explicit full history
       await this.git.clone(repo.url, tempDir, ['--no-single-branch']);
