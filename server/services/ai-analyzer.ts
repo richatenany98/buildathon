@@ -36,6 +36,20 @@ interface QueryResponse {
 }
 
 export class AIAnalyzer {
+  private cleanJsonResponse(text: string): string {
+    // Remove markdown code block markers if present
+    let cleaned = text.trim();
+    if (cleaned.startsWith('```json')) {
+      cleaned = cleaned.replace(/^```json\s*/, '');
+    }
+    if (cleaned.startsWith('```')) {
+      cleaned = cleaned.replace(/^```\s*/, '');
+    }
+    if (cleaned.endsWith('```')) {
+      cleaned = cleaned.replace(/\s*```$/, '');
+    }
+    return cleaned.trim();
+  }
   async analyzeCommitBatches(repositoryId: string, commits: Commit[]): Promise<AnalyzedChange[]> {
     const batchSize = 50;
     const batches = this.chunkArray(commits, batchSize);
@@ -150,7 +164,8 @@ Example response format:
 
       const content = response.content[0];
       if (content.type === 'text') {
-        const result = JSON.parse(content.text || '{"changes":[]}');
+        const cleanedText = this.cleanJsonResponse(content.text || '{"changes":[]}');
+        const result = JSON.parse(cleanedText);
         return result.changes || [];
       }
       return [];
@@ -248,7 +263,8 @@ Return your response in JSON format:
 
       const content = response.content[0];
       if (content.type === 'text') {
-        const result = JSON.parse(content.text || '{}');
+        const cleanedText = this.cleanJsonResponse(content.text || '{}');
+        const result = JSON.parse(cleanedText);
         return {
           answer: result.answer || "I couldn't find enough information to answer that question.",
           relatedCommits: result.relatedCommits || [],
