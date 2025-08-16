@@ -51,28 +51,43 @@ export class AIAnalyzer {
     return cleaned.trim();
   }
   async analyzeCommitBatches(repositoryId: string, commits: Commit[]): Promise<AnalyzedChange[]> {
-    const batchSize = 20; // Reduced batch size for faster processing
-    const batches = this.chunkArray(commits, batchSize);
+    // Limit analysis to recent commits for faster processing
+    const maxCommits = 100;
+    const recentCommits = commits.slice(0, maxCommits);
+    
+    const batchSize = 10; // Smaller batches for faster processing
+    const batches = this.chunkArray(recentCommits, batchSize);
     const analyzedChanges: AnalyzedChange[] = [];
 
-    for (let i = 0; i < batches.length; i++) {
-      const batch = batches[i];
-      console.log(`Analyzing batch ${i + 1}/${batches.length} (${batch.length} commits)`);
-      
+    console.log(`Analyzing ${recentCommits.length} most recent commits in ${batches.length} batches`);
+
+    // Process batches in parallel for much faster analysis
+    const batchPromises = batches.map(async (batch, i) => {
       try {
-        // Add timeout to prevent hanging
+        console.log(`Starting batch ${i + 1}/${batches.length} (${batch.length} commits)`);
+        
+        // Much shorter timeout for faster processing
         const batchChanges = await Promise.race([
           this.analyzeBatch(batch),
           new Promise<AnalyzedChange[]>((_, reject) => 
-            setTimeout(() => reject(new Error('Batch analysis timeout')), 60000) // 60 second timeout
+            setTimeout(() => reject(new Error('Batch timeout')), 20000) // 20 second timeout
           )
         ]);
-        analyzedChanges.push(...batchChanges);
+        
         console.log(`Batch ${i + 1} completed: found ${batchChanges.length} change events`);
+        return batchChanges;
       } catch (error) {
         console.error(`Failed to analyze batch ${i + 1}: ${error.message}`);
-        // Continue with next batch instead of stopping
+        return []; // Return empty array instead of failing
       }
+    });
+
+    // Wait for all batches to complete in parallel
+    const batchResults = await Promise.all(batchPromises);
+    
+    // Flatten results
+    for (const batchChanges of batchResults) {
+      analyzedChanges.push(...batchChanges);
     }
 
     // Store change events in database
@@ -108,48 +123,22 @@ export class AIAnalyzer {
     }));
 
     const prompt = `
-Analyze this batch of Git commits and identify logical change events. Group related commits together and provide deep semantic understanding of why changes were made, focusing on the PURPOSE and BUSINESS VALUE.
+Analyze these commits and group them into logical changes. Be concise and fast.
 
-Commits to analyze:
+Commits:
 ${JSON.stringify(commitSummaries, null, 2)}
 
-For each logical change event you identify, provide:
-1. A descriptive title that explains the semantic purpose (e.g., "Introduced user dashboard for improved self-service")
-2. A detailed description explaining WHAT was built and WHY it was needed
-3. The category: new_feature, enhancement, bug_fix, refactoring, or optimization
-4. The rationale: the deep reasoning behind why this change was necessary (business needs, user problems solved, technical debt addressed)
-5. The business impact: specific benefits to users, developers, or the business (measurable when possible)
-6. The commit SHAs involved
-7. Estimated files affected (based on commit messages and patterns)
-
-Focus on understanding the INTENT behind code changes. Use the filePaths, fileTypes, and changeTypes to provide deeper semantic understanding:
-
-- If new pages/routes are added (changeTypes includes 'new_page'), explain what user journey or workflow they enable
-- If new components are created (changeTypes includes 'new_component'), explain what UI functionality or user interaction they support
-- If APIs are added (changeTypes includes 'api_change'), explain what business process or data flow they enable
-- If authentication changes (changeTypes includes 'authentication'), explain what security requirements or user access patterns they address
-- If database changes (changeTypes includes 'database_change'), explain what data needs or business rules they support
-
-When you see specific file patterns, infer the business purpose:
-- Files in /pages/, /views/, /routes/ → User-facing features and workflows
-- Files in /components/ → Reusable UI elements and interactions
-- Files in /api/, /controllers/ → Business logic and data operations
-- Files with 'auth', 'login', 'signup' → User access and security
-- Files with 'dashboard', 'profile', 'settings' → User self-service capabilities
-
-Return a JSON array of change events. Group related commits that work toward the same business goal.
-
-Example response format:
+Return JSON with this format:
 {
   "changes": [
     {
-      "title": "Introduced user dashboard for self-service account management",
-      "description": "Created a comprehensive user dashboard allowing customers to view account details, update preferences, and track usage without contacting support",
-      "category": "new_feature",
-      "rationale": "Support team was overwhelmed with basic account inquiries. Users needed autonomy to manage their accounts and reduce friction in common tasks",
-      "businessImpact": "Reduces support ticket volume by estimated 40%, improves user satisfaction through self-service capabilities, and enables scalable customer management",
-      "commitShas": ["a1b2c3d4", "e5f6g7h8"],
-      "filesAffected": ["dashboard.js", "profile.js", "settings.js", "api/user.js"]
+      "title": "Brief title of what was changed",
+      "description": "What was built and why",
+      "category": "new_feature|enhancement|bug_fix|refactoring|optimization",
+      "rationale": "Why this change was needed",
+      "businessImpact": "Benefits to users or business",
+      "commitShas": ["sha1", "sha2"],
+      "filesAffected": ["file1.js", "file2.js"]
     }
   ]
 }
