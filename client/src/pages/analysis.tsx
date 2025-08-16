@@ -29,16 +29,26 @@ export default function Analysis() {
 
   if (repositoryLoading || progressLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-github-blue"></div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50/30 via-purple-50/20 to-indigo-50/30 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg floating-animation">
+            <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+          </div>
+          <p className="text-slate-600 font-medium">Loading repository analysis...</p>
+        </div>
       </div>
     );
   }
 
   if (!repository || !progress) {
     return (
-      <div className="text-center py-8">
-        <p className="text-github-gray">Repository not found</p>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50/30 via-purple-50/20 to-indigo-50/30 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <span className="text-2xl">❗</span>
+          </div>
+          <p className="text-slate-600 font-medium">Repository not found</p>
+        </div>
       </div>
     );
   }
