@@ -94,20 +94,20 @@ export class GitAnalyzer {
       let log: LogResult;
       try {
         // Get full commit information without --oneline to get complete data
-        log = await this.git.log(['--no-merges', '--max-count=500']);
+        log = await this.git.log(['--no-merges']);
         console.log(`Found ${log.all.length} commits on current branch`);
         
         // If we only get 1 commit, try getting from all branches/refs
         if (log.all.length <= 1) {
           console.log('Trying to get commits from all refs...');
-          log = await this.git.log(['--all', '--no-merges', '--max-count=500']);
+          log = await this.git.log(['--all', '--no-merges']);
           console.log(`Found ${log.all.length} commits across all refs`);
         }
       } catch (error) {
         console.warn('Failed to get commit log:', error.message);
         // Try a simpler approach if the above fails
         try {
-          log = await this.git.log(['--max-count=100']);
+          log = await this.git.log([]);
           console.log(`Fallback: Found ${log.all.length} commits`);
         } catch (fallbackError) {
           console.error('All Git log attempts failed:', fallbackError.message);

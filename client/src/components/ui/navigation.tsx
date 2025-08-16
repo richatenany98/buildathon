@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Clock, Book, Plus } from "lucide-react";
+import { Clock, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function Navigation() {
@@ -16,10 +16,6 @@ export default function Navigation() {
             </Link>
           </div>
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" className="text-github-gray hover:text-gray-900">
-              <Book className="w-4 h-4 mr-2" />
-              Docs
-            </Button>
             <Link href="/">
               <Button size="sm" className="bg-github-blue hover:bg-blue-700" data-testid="button-new-analysis">
                 <Plus className="w-4 h-4 mr-2" />
