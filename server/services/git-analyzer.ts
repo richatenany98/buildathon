@@ -43,14 +43,19 @@ export class GitAnalyzer {
       }
       
       // Clone repository with full history - ensure we get ALL commits
-      this.git = simpleGit();
+      this.git = simpleGit({
+        binary: '/nix/store/1yj5z39xwiram4s0dm1i2ldpw4cbmwa6-replit-runtime-path/bin/git'
+      });
       console.log(`Cloning ${repo.url} to ${tempDir}`);
       
       // Clone with explicit full history
       await this.git.clone(repo.url, tempDir, ['--no-single-branch']);
       
       // Switch to cloned repository
-      this.git = simpleGit(tempDir);
+      this.git = simpleGit({
+        baseDir: tempDir,
+        binary: '/nix/store/1yj5z39xwiram4s0dm1i2ldpw4cbmwa6-replit-runtime-path/bin/git'
+      });
       this.repoPath = tempDir;
       
       // Check what branches we have
