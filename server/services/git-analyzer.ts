@@ -72,8 +72,29 @@ export class GitAnalyzer {
     }
 
     try {
-      // Get all commits
-      const log: LogResult = await this.git.log(['--all', '--oneline', '--stat']);
+      // Get all commits - try different approaches to get complete history
+      console.log('Getting commit log from repository...');
+      
+      // First try to get branches info
+      const branches = await this.git.branch(['-r']);
+      console.log('Remote branches:', Object.keys(branches.branches));
+      
+      // Try getting commits from the current branch first, then all branches
+      let log: LogResult;
+      try {
+        log = await this.git.log(['--oneline', '--no-merges']);
+        console.log(`Found ${log.all.length} commits on current branch`);
+        
+        // If we only get 1 commit, try getting from all branches/refs
+        if (log.all.length <= 1) {
+          console.log('Trying to get commits from all refs...');
+          log = await this.git.log(['--all', '--oneline', '--no-merges']);
+          console.log(`Found ${log.all.length} commits across all refs`);
+        }
+      } catch (error) {
+        console.warn('Failed to get commit log:', error.message);
+        log = { all: [] } as LogResult;
+      }
       
       const commits: CommitInfo[] = [];
       
@@ -96,15 +117,28 @@ export class GitAnalyzer {
           } catch (diffError) {
             // Handle initial commit or commits without parents
             try {
-              // For initial commit, show all files as new
-              const showResult = await this.git.show([commit.hash, '--name-only', '--pretty=format:']);
-              filePaths = showResult.split('\n').filter(f => f.trim());
-              filesChanged = filePaths.length;
-              linesAdded = 0; // Can't calculate for initial commits
+              // For initial commit or E2BIG errors, try different approaches
+              try {
+                // Try simpler show command first
+                const showResult = await this.git.show([commit.hash, '--name-only', '--pretty=format:']);
+                filePaths = showResult.split('\n').filter(f => f.trim());
+                filesChanged = filePaths.length;
+              } catch (showError) {
+                // If show fails, try ls-tree for the commit
+                try {
+                  const lsResult = await this.git.raw(['ls-tree', '-r', '--name-only', commit.hash]);
+                  filePaths = lsResult.split('\n').filter(f => f.trim());
+                  filesChanged = filePaths.length;
+                } catch (lsError) {
+                  console.warn(`Could not get file info for commit ${commit.hash.substring(0,8)}: ${showError.message}`);
+                  filePaths = [];
+                  filesChanged = 0;
+                }
+              }
+              linesAdded = 0; // Can't calculate for initial commits  
               linesRemoved = 0;
-            } catch (showError) {
-              console.warn(`Could not get file info for commit ${commit.hash.substring(0,8)}: ${showError.message}`);
-              // Still include the commit with basic info
+            } catch (error) {
+              console.warn(`Could not process files for commit ${commit.hash.substring(0,8)}: ${error.message}`);
               filePaths = [];
               filesChanged = 0;
               linesAdded = 0;
@@ -123,12 +157,23 @@ export class GitAnalyzer {
           
           console.log(`Processing commit ${commit.hash.substring(0,8)}: "${commit.message.substring(0,50)}..." (${filesChanged} files)`);
           
+          // Handle date parsing safely
+          let timestamp: Date;
+          try {
+            timestamp = new Date(commit.date);
+            if (isNaN(timestamp.getTime())) {
+              timestamp = new Date(); // fallback to current date
+            }
+          } catch {
+            timestamp = new Date(); // fallback to current date
+          }
+
           commits.push({
             sha: commit.hash,
-            message: commit.message,
+            message: commit.message || '',
             author: commit.author_name || 'Unknown',
             authorEmail: commit.author_email || 'unknown@email.com',
-            timestamp: new Date(commit.date),
+            timestamp,
             filesChanged,
             linesAdded,
             linesRemoved,
