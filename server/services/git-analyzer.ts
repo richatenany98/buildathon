@@ -79,11 +79,39 @@ export class GitAnalyzer {
       
       for (const commit of log.all) {
         try {
-          // Get detailed commit info with stats
-          const diffSummary = await this.git.diffSummary([`${commit.hash}^`, commit.hash]);
+          let diffSummary;
+          let filePaths: string[] = [];
+          let filesChanged = 0;
+          let linesAdded = 0;
+          let linesRemoved = 0;
+
+          try {
+            // Get detailed commit info with stats
+            diffSummary = await this.git.diffSummary([`${commit.hash}^`, commit.hash]);
+            filePaths = diffSummary.files.map(file => file.file);
+            filesChanged = diffSummary.files.length;
+            linesAdded = diffSummary.insertions;
+            linesRemoved = diffSummary.deletions;
+          } catch (diffError) {
+            // Handle initial commit or commits without parents
+            try {
+              // For initial commit, show all files as new
+              const showResult = await this.git.show([commit.hash, '--name-only', '--pretty=format:']);
+              filePaths = showResult.split('\n').filter(f => f.trim());
+              filesChanged = filePaths.length;
+              linesAdded = 0; // Can't calculate for initial commits
+              linesRemoved = 0;
+            } catch (showError) {
+              console.warn(`Could not get file info for commit ${commit.hash}: ${showError.message}`);
+              // Still include the commit with basic info
+              filePaths = [];
+              filesChanged = 0;
+              linesAdded = 0;
+              linesRemoved = 0;
+            }
+          }
           
-          // Extract file paths and types for semantic analysis
-          const filePaths = diffSummary.files.map(file => file.file);
+          // Extract file types for semantic analysis
           const fileTypes = filePaths.map(path => {
             const ext = path.split('.').pop()?.toLowerCase() || '';
             return ext;
@@ -98,15 +126,14 @@ export class GitAnalyzer {
             author: commit.author_name,
             authorEmail: commit.author_email,
             timestamp: new Date(commit.date),
-            filesChanged: diffSummary.files.length,
-            linesAdded: diffSummary.insertions,
-            linesRemoved: diffSummary.deletions,
+            filesChanged,
+            linesAdded,
+            linesRemoved,
             filePaths,
             fileTypes,
             changeTypes,
           });
         } catch (error) {
-          // Skip commits that can't be analyzed (e.g., initial commit)
           console.warn(`Skipping commit ${commit.hash}: ${error.message}`);
         }
       }
