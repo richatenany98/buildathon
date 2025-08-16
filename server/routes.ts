@@ -143,6 +143,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Retry failed repository analysis
+  app.post("/api/repositories/:id/retry", async (req, res) => {
+    try {
+      const repository = await storage.getRepository(req.params.id);
+      if (!repository) {
+        return res.status(404).json({ error: "Repository not found" });
+      }
+
+      // Reset status to queued
+      await storage.updateRepository(req.params.id, { analysisStatus: "queued" });
+      
+      // Start analysis in background
+      analyzeRepositoryBackground(req.params.id);
+      
+      res.json({ message: "Analysis restarted" });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // Background analysis function
   async function analyzeRepositoryBackground(repositoryId: string) {
     try {
