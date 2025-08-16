@@ -50,72 +50,85 @@ export default function TimelineVisualization({ events }: TimelineVisualizationP
 
   if (sortedEvents.length === 0) {
     return (
-      <Card className="shadow-sm">
-        <CardContent className="p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Evolution Timeline</h3>
-          <p className="text-github-gray text-center py-8">
-            No change events have been identified yet. Analysis may still be in progress.
-          </p>
+      <Card className="enhanced-card">
+        <CardContent className="p-10">
+          <h3 className="text-2xl font-bold gradient-text mb-8 flex items-center">
+            <div className="w-3 h-8 bg-gradient-to-b from-blue-500 to-purple-600 rounded-full mr-4"></div>
+            Evolution Timeline
+          </h3>
+          <div className="text-center py-12">
+            <div className="w-24 h-24 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <span className="text-4xl">⏳</span>
+            </div>
+            <p className="text-gray-600 text-lg font-medium">
+              No change events have been identified yet. Analysis may still be in progress.
+            </p>
+          </div>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className="glass-card shadow-xl">
-      <CardContent className="p-8">
-        <h3 className="text-xl font-semibold text-slate-800 mb-6 flex items-center">
-          <div className="w-2 h-6 bg-gradient-to-b from-blue-500 to-purple-600 rounded-full mr-3"></div>
+    <Card className="glass-card">
+      <CardContent className="p-10">
+        <h3 className="text-2xl font-bold gradient-text mb-8 flex items-center">
+          <div className="w-3 h-8 bg-gradient-to-b from-blue-500 to-purple-600 rounded-full mr-4"></div>
           Evolution Timeline
         </h3>
         
         <div className="relative">
           {/* Enhanced Timeline axis with gradient */}
-          <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-400 via-purple-500 to-indigo-600 rounded-full opacity-60" />
+          <div className="absolute left-10 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-400 via-purple-500 to-indigo-600 rounded-full opacity-70 shadow-sm" />
           
-          <div className="space-y-8">
+          <div className="space-y-10">
             {sortedEvents.map((event, index) => (
-              <div key={event.id} className="relative flex items-start space-x-6 group hover:bg-slate-50/50 rounded-lg p-4 -m-4 transition-all duration-200" data-testid={`timeline-event-${index}`}>
+              <div key={event.id} className="relative flex items-start space-x-8 group hover:bg-gradient-to-r hover:from-blue-50/30 hover:to-purple-50/30 rounded-2xl p-6 -m-6 transition-all duration-300 hover:shadow-lg" data-testid={`timeline-event-${index}`}>
                 <div className="flex-shrink-0 relative">
-                  <div className={`w-4 h-4 ${getCategoryColor(event.category)} rounded-full border-4 border-white shadow-lg group-hover:scale-110 transition-transform duration-200`} />
-                  <div className={`absolute inset-0 w-4 h-4 ${getCategoryColor(event.category)} rounded-full animate-ping opacity-20`}></div>
+                  <div className={`w-6 h-6 ${getCategoryColor(event.category)} rounded-full border-4 border-white shadow-xl group-hover:scale-125 transition-all duration-300`} />
+                  <div className={`absolute inset-0 w-6 h-6 ${getCategoryColor(event.category)} rounded-full animate-ping opacity-30`}></div>
+                  <div className="absolute inset-0 w-6 h-6 bg-white rounded-full blur-sm opacity-50"></div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <span className="text-sm font-medium" data-testid={`event-title-${index}`}>
+                  <div className="flex items-center space-x-3 mb-3">
+                    <span className="text-lg font-bold text-gray-900" data-testid={`event-title-${index}`}>
                       {event.title}
                     </span>
-                    <Badge variant={getCategoryBadgeVariant(event.category) as any}>
+                    <Badge variant={getCategoryBadgeVariant(event.category) as any} className="px-3 py-1 text-xs font-semibold">
                       {formatCategory(event.category)}
                     </Badge>
                   </div>
-                  <p className="text-sm text-github-gray mb-2" data-testid={`event-description-${index}`}>
+                  <p className="text-gray-700 mb-4 leading-relaxed" data-testid={`event-description-${index}`}>
                     {event.description}
                   </p>
-                  <div className="text-xs text-github-gray">
-                    <span data-testid={`event-timestamp-${index}`}>
-                      {new Date(event.timestamp).toLocaleDateString()}
-                    </span>
+                  <div className="flex items-center space-x-4 text-sm text-gray-500">
+                    <div className="flex items-center space-x-2 bg-gray-100 px-3 py-1 rounded-full">
+                      <span className="w-2 h-2 bg-blue-400 rounded-full"></span>
+                      <span className="font-medium" data-testid={`event-timestamp-${index}`}>
+                        {new Date(event.timestamp).toLocaleDateString()}
+                      </span>
+                    </div>
                     {event.commitShas.length > 0 && (
-                      <>
-                        <span className="mx-1">•</span>
-                        <span data-testid={`event-commits-${index}`}>
+                      <div className="flex items-center space-x-2 bg-green-100 px-3 py-1 rounded-full">
+                        <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+                        <span className="font-medium" data-testid={`event-commits-${index}`}>
                           {event.commitShas.length} commit{event.commitShas.length > 1 ? 's' : ''}
                         </span>
-                      </>
+                      </div>
                     )}
                     {event.filesAffected.length > 0 && (
-                      <>
-                        <span className="mx-1">•</span>
-                        <span data-testid={`event-files-${index}`}>
+                      <div className="flex items-center space-x-2 bg-purple-100 px-3 py-1 rounded-full">
+                        <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
+                        <span className="font-medium" data-testid={`event-files-${index}`}>
                           {event.filesAffected.length} file{event.filesAffected.length > 1 ? 's' : ''} affected
                         </span>
-                      </>
+                      </div>
                     )}
                   </div>
                   {event.rationale && (
-                    <div className="mt-2 p-2 bg-gray-50 rounded text-xs text-github-gray">
-                      <strong>Rationale:</strong> {event.rationale}
+                    <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-200">
+                      <strong className="text-gray-800 font-semibold">Rationale:</strong> 
+                      <span className="text-gray-700 ml-2">{event.rationale}</span>
                     </div>
                   )}
                 </div>
@@ -125,22 +138,23 @@ export default function TimelineVisualization({ events }: TimelineVisualizationP
         </div>
 
         {events.length > 10 && (
-          <div className="mt-6 text-center">
+          <div className="mt-10 text-center">
             <Button 
               variant="outline" 
-              size="sm" 
+              size="lg" 
               onClick={() => setShowAll(!showAll)}
+              className="bg-white/80 border-slate-300 hover:bg-white hover:shadow-xl transition-all duration-300 hover:scale-105 backdrop-blur-sm px-8 py-3"
               data-testid="button-view-complete-timeline"
             >
               {showAll ? (
                 <>
                   Show Recent Only
-                  <ArrowUp className="w-4 h-4 ml-1" />
+                  <ArrowUp className="w-5 h-5 ml-2" />
                 </>
               ) : (
                 <>
                   View Complete Timeline ({events.length} total)
-                  <ArrowRight className="w-4 h-4 ml-1" />
+                  <ArrowRight className="w-5 h-5 ml-2" />
                 </>
               )}
             </Button>

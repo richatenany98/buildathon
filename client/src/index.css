@@ -81,30 +81,77 @@
     @apply border-border;
   }
   body {
-    @apply bg-gradient-to-br from-slate-50 via-white to-blue-50 text-foreground min-h-screen;
+    @apply text-foreground min-h-screen;
     font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg, 
+      hsl(210, 30%, 98%) 0%,
+      hsl(220, 26%, 97%) 25%,
+      hsl(210, 40%, 98%) 50%,
+      hsl(215, 35%, 96%) 75%,
+      hsl(225, 25%, 95%) 100%);
+    background-attachment: fixed;
   }
   
   /* Enhanced visual elements */
   .glass-card {
-    @apply backdrop-blur-sm bg-white/90 border border-white/20 shadow-xl;
+    @apply backdrop-blur-lg bg-white/95 border border-white/30;
+    box-shadow: 
+      0 20px 25px -5px rgba(0, 0, 0, 0.1),
+      0 10px 10px -5px rgba(0, 0, 0, 0.04),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8),
+      0 0 0 1px rgba(255, 255, 255, 0.05);
+  }
+  
+  .enhanced-card {
+    @apply backdrop-blur-md bg-white/85 border border-slate-200/50 shadow-lg hover:shadow-xl;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: linear-gradient(135deg, 
+      rgba(255, 255, 255, 0.9) 0%,
+      rgba(255, 255, 255, 0.8) 100%);
   }
   
   .gradient-text {
     @apply bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent;
   }
   
+  .premium-gradient {
+    background: linear-gradient(135deg,
+      hsl(230, 85%, 62%) 0%,
+      hsl(245, 85%, 65%) 25%,
+      hsl(260, 85%, 68%) 50%,
+      hsl(275, 85%, 65%) 75%,
+      hsl(290, 85%, 62%) 100%);
+  }
+  
   .shimmer {
     background: linear-gradient(90deg, 
       rgba(255, 255, 255, 0) 0%,
-      rgba(255, 255, 255, 0.4) 50%,
+      rgba(255, 255, 255, 0.6) 50%,
       rgba(255, 255, 255, 0) 100%);
-    animation: shimmer 2s infinite;
+    animation: shimmer 2.5s infinite;
+  }
+  
+  .floating {
+    animation: floating 3s ease-in-out infinite;
+  }
+  
+  .pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite alternate;
   }
   
   @keyframes shimmer {
     0% { transform: translateX(-100%); }
     100% { transform: translateX(100%); }
+  }
+  
+  @keyframes floating {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+  
+  @keyframes pulse-glow {
+    0% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+    100% { box-shadow: 0 0 30px rgba(147, 51, 234, 0.4); }
   }
 }
 

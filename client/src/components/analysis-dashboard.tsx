@@ -151,37 +151,37 @@ ${recentQueries.slice(0, 5).map((query, index) => `
   const categoryStats = getCategoryStats();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Repository Overview Header */}
-        <Card className="glass-card shadow-xl mb-8 overflow-hidden">
-          <CardContent className="p-8">
+        <Card className="glass-card mb-10 overflow-hidden pulse-glow">
+          <CardContent className="p-10">
             <div className="flex items-start justify-between">
-              <div className="flex items-start space-x-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                  <GitBranch className="text-white w-8 h-8" />
+              <div className="flex items-start space-x-8">
+                <div className="w-20 h-20 premium-gradient rounded-3xl flex items-center justify-center shadow-2xl floating">
+                  <GitBranch className="text-white w-10 h-10" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-slate-800 mb-2" data-testid="text-repository-name">
+                  <h2 className="text-3xl font-bold gradient-text mb-3" data-testid="text-repository-name">
                     {repository.name}
                   </h2>
                   {repository.description && (
-                    <p className="text-slate-600 text-lg mb-3" data-testid="text-repository-description">
+                    <p className="text-slate-600 text-xl mb-4 max-w-2xl leading-relaxed" data-testid="text-repository-description">
                       {repository.description}
                     </p>
                   )}
-                  <div className="flex items-center space-x-6 text-sm">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span className="text-slate-700 font-medium" data-testid="text-commit-count">{repository.commitCount} commits</span>
+                  <div className="flex items-center space-x-8 text-sm">
+                    <div className="flex items-center space-x-3 bg-blue-50 px-4 py-2 rounded-full">
+                      <div className="w-3 h-3 bg-blue-500 rounded-full shadow-sm"></div>
+                      <span className="text-slate-700 font-semibold" data-testid="text-commit-count">{repository.commitCount} commits</span>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-slate-700 font-medium" data-testid="text-contributor-count">{repository.contributorCount} contributors</span>
+                    <div className="flex items-center space-x-3 bg-green-50 px-4 py-2 rounded-full">
+                      <div className="w-3 h-3 bg-green-500 rounded-full shadow-sm"></div>
+                      <span className="text-slate-700 font-semibold" data-testid="text-contributor-count">{repository.contributorCount} contributors</span>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                      <span className="text-slate-700 font-medium" data-testid="text-analyzed-time">
+                    <div className="flex items-center space-x-3 bg-purple-50 px-4 py-2 rounded-full">
+                      <div className="w-3 h-3 bg-purple-500 rounded-full shadow-sm"></div>
+                      <span className="text-slate-700 font-semibold" data-testid="text-analyzed-time">
                         Analyzed {repository.lastAnalyzedAt ? new Date(repository.lastAnalyzedAt).toLocaleDateString() : 'recently'}
                       </span>
                     </div>
@@ -191,12 +191,12 @@ ${recentQueries.slice(0, 5).map((query, index) => `
               <div className="flex items-center space-x-3">
                 <Button 
                   variant="outline" 
-                  size="sm" 
+                  size="lg" 
                   onClick={exportReport}
-                  className="bg-white/50 border-slate-200 hover:bg-white hover:shadow-lg transition-all duration-200"
+                  className="bg-white/70 border-slate-300 hover:bg-white hover:shadow-xl transition-all duration-300 hover:scale-105 backdrop-blur-sm"
                   data-testid="button-export-report"
                 >
-                  <Download className="w-4 h-4 mr-2" />
+                  <Download className="w-5 h-5 mr-3" />
                   Export Report
                 </Button>
               </div>
@@ -204,70 +204,80 @@ ${recentQueries.slice(0, 5).map((query, index) => `
         </CardContent>
       </Card>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-10">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-8">
             <QueryInterface repositoryId={repository.id} />
             <TimelineVisualization events={changeEvents} />
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-8">
           {/* Analysis Summary */}
-          <Card className="shadow-sm">
-            <CardContent className="p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Analysis Summary</h3>
+          <Card className="enhanced-card">
+            <CardContent className="p-8">
+              <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                <div className="w-2 h-6 bg-gradient-to-b from-blue-500 to-purple-600 rounded-full mr-3"></div>
+                Analysis Summary
+              </h3>
               
-              <div className="space-y-4">
-                <div className="flex justify-between">
-                  <span className="text-github-gray">Total Commits</span>
-                  <span className="font-medium" data-testid="text-total-commits">{repository.commitCount}</span>
+              <div className="space-y-5">
+                <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200">
+                  <span className="text-gray-700 font-medium">Total Commits</span>
+                  <span className="font-bold text-blue-700 text-lg" data-testid="text-total-commits">{repository.commitCount}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-github-gray">Contributors</span>
-                  <span className="font-medium" data-testid="text-total-contributors">{repository.contributorCount}</span>
+                <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-r from-green-50 to-green-100 border border-green-200">
+                  <span className="text-gray-700 font-medium">Contributors</span>
+                  <span className="font-bold text-green-700 text-lg" data-testid="text-total-contributors">{repository.contributorCount}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-github-gray">Files Analyzed</span>
-                  <span className="font-medium" data-testid="text-files-analyzed">{repository.fileCount}</span>
+                <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-r from-purple-50 to-purple-100 border border-purple-200">
+                  <span className="text-gray-700 font-medium">Files Analyzed</span>
+                  <span className="font-bold text-purple-700 text-lg" data-testid="text-files-analyzed">{repository.fileCount}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-github-gray">Change Events</span>
-                  <span className="font-medium" data-testid="text-change-events">{changeEvents.length}</span>
+                <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-r from-indigo-50 to-indigo-100 border border-indigo-200">
+                  <span className="text-gray-700 font-medium">Change Events</span>
+                  <span className="font-bold text-indigo-700 text-lg" data-testid="text-change-events">{changeEvents.length}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-github-gray">Major Features</span>
-                  <span className="font-medium" data-testid="text-major-features">{repository.majorFeatureCount}</span>
+                <div className="flex justify-between items-center p-3 rounded-lg bg-gradient-to-r from-orange-50 to-orange-100 border border-orange-200">
+                  <span className="text-gray-700 font-medium">Major Features</span>
+                  <span className="font-bold text-orange-700 text-lg" data-testid="text-major-features">{repository.majorFeatureCount}</span>
                 </div>
               </div>
 
-              <div className="mt-6 pt-4 border-t border-gray-200">
+              <div className="mt-8 pt-6 border-t border-gray-200">
                 <div className="text-sm">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-github-gray">Analysis Confidence</span>
-                    <span className="font-medium text-github-success" data-testid="text-confidence-score">
+                  <div className="flex justify-between mb-4">
+                    <span className="text-gray-700 font-medium">Analysis Confidence</span>
+                    <span className="font-bold text-green-600 text-lg" data-testid="text-confidence-score">
                       {repository.confidenceScore}%
                     </span>
                   </div>
-                  <Progress value={repository.confidenceScore} className="h-2" />
+                  <div className="relative">
+                    <Progress value={repository.confidenceScore} className="h-3 bg-gray-200" />
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-green-400 to-green-600 shadow-sm" 
+                         style={{ width: `${repository.confidenceScore}%` }}></div>
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Change Categories */}
-          <Card className="shadow-sm">
-            <CardContent className="p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Change Categories</h3>
+          <Card className="enhanced-card">
+            <CardContent className="p-8">
+              <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                <div className="w-2 h-6 bg-gradient-to-b from-purple-500 to-pink-600 rounded-full mr-3"></div>
+                Change Categories
+              </h3>
               
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {categoryStats.map((category) => (
-                  <div key={category.name} className="flex items-center justify-between" data-testid={`category-${category.name.toLowerCase().replace(' ', '-')}`}>
-                    <div className="flex items-center space-x-2">
-                      <div className={`w-3 h-3 ${category.color} rounded-full`} />
-                      <span className="text-sm">{category.name}</span>
+                  <div key={category.name} className="flex items-center justify-between p-4 rounded-xl bg-white/50 border border-gray-100 hover:shadow-md transition-all duration-200" data-testid={`category-${category.name.toLowerCase().replace(' ', '-')}`}>
+                    <div className="flex items-center space-x-4">
+                      <div className={`w-4 h-4 ${category.color} rounded-full shadow-sm`} />
+                      <span className="font-medium text-gray-800">{category.name}</span>
                     </div>
-                    <span className="text-sm font-medium">{category.count}</span>
+                    <span className="text-lg font-bold text-gray-700 bg-gray-100 px-3 py-1 rounded-full">{category.count}</span>
                   </div>
                 ))}
               </div>
@@ -275,29 +285,37 @@ ${recentQueries.slice(0, 5).map((query, index) => `
           </Card>
 
           {/* Recent Queries */}
-          <Card className="shadow-sm">
-            <CardContent className="p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Queries</h3>
+          <Card className="enhanced-card">
+            <CardContent className="p-8">
+              <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                <div className="w-2 h-6 bg-gradient-to-b from-green-500 to-teal-600 rounded-full mr-3"></div>
+                Recent Queries
+              </h3>
               
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {recentQueries.slice(-3).reverse().map((query) => (
                   <button
                     key={query.id}
-                    className="w-full text-left p-3 rounded-lg hover:bg-gray-50 border border-gray-100 transition-colors"
+                    className="w-full text-left p-4 rounded-xl hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 border border-gray-100 hover:border-blue-200 transition-all duration-300 hover:shadow-lg"
                     data-testid={`query-${query.id}`}
                   >
-                    <div className="text-sm font-medium text-gray-900 mb-1 truncate">
+                    <div className="text-sm font-semibold text-gray-900 mb-2 truncate leading-relaxed">
                       "{query.question}"
                     </div>
-                    <div className="text-xs text-github-gray">
+                    <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full inline-block">
                       {new Date(query.createdAt).toLocaleTimeString()}
                     </div>
                   </button>
                 ))}
                 {recentQueries.length === 0 && (
-                  <p className="text-sm text-github-gray text-center py-4">
-                    No queries yet. Ask your first question!
-                  </p>
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-2xl">💭</span>
+                    </div>
+                    <p className="text-gray-500 font-medium">
+                      No queries yet. Ask your first question!
+                    </p>
+                  </div>
                 )}
               </div>
             </CardContent>
