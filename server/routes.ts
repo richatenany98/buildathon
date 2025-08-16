@@ -63,14 +63,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const normalizedUrl = normalizeGitHubUrl(validatedData.url);
       const repositoryData = { ...validatedData, url: normalizedUrl };
       
-      // Check if repository already exists
+      // Check if repository already exists, if so return existing one
       const existing = await storage.getRepositoryByUrl(normalizedUrl);
+      let repository;
+      
       if (existing) {
-        return res.status(400).json({ error: "Repository already exists" });
+        // Reset analysis status to queued for re-analysis
+        repository = await storage.updateRepository(existing.id, { analysisStatus: "queued" });
+      } else {
+        // Create new repository record
+        repository = await storage.createRepository(repositoryData);
       }
-
-      // Create repository record
-      const repository = await storage.createRepository(repositoryData);
       res.json(repository);
 
       // Start analysis in background
