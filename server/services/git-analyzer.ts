@@ -42,21 +42,32 @@ export class GitAnalyzer {
         // Directory doesn't exist, continue
       }
       
-      // Clone repository with full history
+      // Clone repository with full history - ensure we get ALL commits
       this.git = simpleGit();
-      await this.git.clone(repo.url, tempDir);
+      console.log(`Cloning ${repo.url} to ${tempDir}`);
+      
+      // Clone with explicit full history
+      await this.git.clone(repo.url, tempDir, ['--no-single-branch']);
       
       // Switch to cloned repository
       this.git = simpleGit(tempDir);
       this.repoPath = tempDir;
       
-      // Switch to specific branch if not main/master
-      if (repo.defaultRef !== 'refs/heads/main' && repo.defaultRef !== 'refs/heads/master') {
-        const branchName = repo.defaultRef.replace('refs/heads/', '');
+      // Check what branches we have
+      const branches = await this.git.branch(['-a']);
+      console.log('Available branches after clone:', Object.keys(branches.branches));
+      
+      // Make sure we're on master/main branch and fetch all refs
+      try {
+        await this.git.fetch(['origin']);
+        await this.git.checkout('master');
+        console.log('Switched to master branch');
+      } catch (masterError) {
         try {
-          await this.git.checkout(branchName);
-        } catch (error) {
-          console.warn(`Could not switch to branch ${branchName}, using default branch`);
+          await this.git.checkout('main');
+          console.log('Switched to main branch');
+        } catch (mainError) {
+          console.warn('Could not switch to master or main branch, using default');
         }
       }
 
