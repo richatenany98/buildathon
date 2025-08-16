@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { storage } from '../storage';
+import { storage } from '../storage-mongo';
 import type { Repository, Commit, ChangeEvent } from '@shared/schema';
 
 /*

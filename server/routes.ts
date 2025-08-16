@@ -227,6 +227,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Repository stats: ${stats.contributors.size} contributors, ${stats.totalFiles} files`);
 
       // Analyze with AI
+      console.log(`About to retrieve commits for repository: ${repositoryId}`);
       const dbCommits = await storage.getCommitsByRepository(repositoryId);
       console.log(`Retrieved ${dbCommits.length} commits from database`);
       await aiAnalyzer.analyzeCommitBatches(repositoryId, dbCommits);

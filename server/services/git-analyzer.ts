@@ -1,5 +1,5 @@
 import { simpleGit, SimpleGit, LogResult, DiffResult } from 'simple-git';
-import { storage } from '../storage';
+import { storage } from '../storage-mongo';
 import type { Repository, Commit } from '@shared/schema';
 import { promises as fs } from 'fs';
 import path from 'path';

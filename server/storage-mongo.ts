@@ -178,16 +178,23 @@ export class MemStorage implements IStorage {
   }
 
   async createCommits(commits: Omit<Commit, '_id'>[]): Promise<void> {
+    console.log(`MongoStorage.createCommits called with ${commits.length} commits`);
     commits.forEach(commit => {
       const id = new mongoose.Types.ObjectId().toString();
       this.commits.set(id, { ...commit, _id: id } as Commit);
+      console.log(`Saved commit ${commit.sha?.substring(0,8)} with id ${id}`);
     });
+    console.log(`MongoStorage now has ${this.commits.size} total commits`);
   }
 
   async getCommitsByRepository(repositoryId: string): Promise<Commit[]> {
-    return Array.from(this.commits.values())
-      .filter(commit => commit.repositoryId === repositoryId)
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    console.log(`MongoStorage.getCommitsByRepository called for ${repositoryId}`);
+    console.log(`Total commits in storage: ${this.commits.size}`);
+    const allCommits = Array.from(this.commits.values());
+    console.log(`All repository IDs in storage:`, allCommits.map(c => c.repositoryId));
+    const filtered = allCommits.filter(commit => commit.repositoryId === repositoryId);
+    console.log(`Found ${filtered.length} commits for repository ${repositoryId}`);
+    return filtered.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }
 
   async getCommitsByShas(repositoryId: string, shas: string[]): Promise<Commit[]> {
