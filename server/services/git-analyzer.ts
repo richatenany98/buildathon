@@ -32,12 +32,13 @@ export class GitAnalyzer {
     if (!repo.url || repo.url.trim() === '') {
       throw new Error('Repository URL is empty or invalid');
     }
-    if (!repo.id || repo.id.trim() === '') {
+    const repoId = repo._id || repo.id;
+    if (!repoId || repoId.trim() === '') {
       throw new Error('Repository ID is empty or invalid');
     }
     
     const baseDir = path.join(tmpdir(), 'codebase-analysis');
-    const tempDir = path.join(baseDir, repo.id);
+    const tempDir = path.join(baseDir, repoId);
     
     try {
       // Create base directory

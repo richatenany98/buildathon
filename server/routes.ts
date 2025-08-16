@@ -42,7 +42,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const pathParts = urlObj.pathname.split('/').filter(Boolean);
         if (pathParts.length >= 2) {
           const owner = pathParts[0];
-          const repo = pathParts[1];
+          let repo = pathParts[1];
+          // Remove .git suffix if it already exists to avoid duplication
+          if (repo.endsWith('.git')) {
+            repo = repo.slice(0, -4);
+          }
           return `https://github.com/${owner}/${repo}.git`;
         }
       }
