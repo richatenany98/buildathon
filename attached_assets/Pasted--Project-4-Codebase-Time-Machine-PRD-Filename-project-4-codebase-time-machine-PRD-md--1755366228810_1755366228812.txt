@@ -1,0 +1,103 @@
+# Project 4 — Codebase Time Machine (PRD)
+
+> Filename: `project-4-codebase-time-machine-PRD.md`
+
+## 1) Executive Summary
+Build a system that **clones a repository and analyzes the full Git history** to derive a **semantic understanding of code evolution**. It can **answer “why” questions** (e.g., *“Why was this pattern introduced?”*, *“How did auth evolve?”*), **visualize code ownership and complexity trends**, and **link commits to business features/decisions**.
+
+---
+
+## 2) Goals
+- Clone a target repo and process its **entire Git history**.
+- Build a **temporal, semantic index** of code changes and architecture decisions.
+- Support **natural-language Q&A** about feature evolution and rationale.
+- **Visualize** ownership, churn, and complexity trends over time.
+- **Link commits to business features/decisions** for traceability.
+
+---
+
+## 3) Detailed Requirements
+
+### 3.1 User Flows
+1. **Register Repo**
+   - Submit repo URL (and optional branch/ref).
+   - System clones and schedules analysis of full history.
+2. **Analyze History**
+   - Walk all commits chronologically.
+   - Extract file diffs, rename/move detection, authorship/ownership, complexity metrics, and semantic change summaries.
+   - Build temporal embeddings/index and feature links.
+3. **Ask Questions**
+   - Natural language queries (e.g., *“Show how auth evolved.”*).
+   - Responses include timeline, key commits, diffs, and rationale summaries.
+4. **Explore Visualizations**
+   - Ownership heatmaps, complexity vs. time charts, hotspots, contributor trends.
+5. **Link to Features**
+   - Users can create or import feature/initiative records and map commits to them.
+   - Q&A and visuals can be filtered by feature.
+
+### 3.2 Functional Requirements
+- **Repository Intake**
+  - Clone via HTTPS/SSH; support default branch and specific refs.
+  - Index commit graph, tags, branches.
+- **Change Extraction**
+  - For each commit: metadata, parents, diffs, impacted files, commit message, author, timestamp.
+  - Detect renames/moves.
+  - Compute per-file/per-commit **ownership** (lines added/removed, blame windows).
+  - Compute **complexity** metrics per snapshot (e.g., file length, function count) and **churn**.
+- **Semantic Understanding**
+  - Generate per-commit and per-series **change summaries**.
+  - Build **temporal embeddings** for files/components to track concept drift/evolution.
+  - Group related commits into **change events** (e.g., “Introduce repository pattern”).
+- **Q&A**
+  - Natural-language queries over indexed data.
+  - Return **timeline**, **key commits**, **diff excerpts**, and **rationale summaries** with citations (commit SHAs).
+- **Visualization**
+  - Time series: complexity, churn, ownership.
+  - Ownership by path/module; hotspots.
+  - Feature timelines with linked commits.
+- **Feature Linking**
+  - Create **features** with name/description/business context.
+  - Map commits to features manually or via heuristics (branch names, PR titles, commit messages).
+- **Artifacts & Traceability**
+  - Every answer cites relevant **commit SHAs** and **file paths**.
+  - Persist analysis snapshots for incremental updates.
+
+### 3.3 Non-Functional Requirements
+- **Scalability:** Repos up to very large histories; incremental re-analysis on new commits.
+- **Determinism:** Same repo/ref yields same analysis artifacts.
+- **Auditability:** Store provenance for all summaries and metrics.
+- **Performance:** Stream results; long analyses expose status and partial visuals.
+- **Storage Efficiency:** Deduplicate blobs; compress large artifacts.
+
+### 3.4 Edge Cases
+- Monorepos with millions of lines.
+- Git LFS files, large binaries, or generated code.
+- Submodules; nested repos.
+- Force-push/rebase altering history.
+- Merge commits with massive diffs.
+- File renames/moves without Git metadata.
+- Shallow clones provided; need full fetch.
+- Non-default main branch names.
+- Sparse or non-informative commit messages.
+- Mixed languages; vendored/third-party code skews metrics.
+- Legal/secret files that must be excluded.
+- Repos with no tests or single-commit dumps.
+- Analysis interrupted mid-run; resume required.
+
+---
+
+## 4) Technical Specs
+
+### 4.1 MongoDB Schemas
+
+**`repos`**
+```json
+{
+  "_id": "ObjectId",
+  "url": "string",
+  "defaultRef": "string",              // e.g., "refs/heads/main"
+  "cloneProtocol": "string",           // https | ssh
+  "createdAt": "Date",
+  "lastAnalyzedAt": "Date|null",
+  "analysisStatus": "string"           // queued | cloning | analyzing | completed | failed
+}
