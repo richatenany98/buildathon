@@ -64,7 +64,7 @@ export default function AnalysisDashboard({ repository }: AnalysisDashboardProps
                   <span data-testid="text-commit-count">{repository.commitCount} commits</span>
                   <span data-testid="text-contributor-count">{repository.contributorCount} contributors</span>
                   <span data-testid="text-analyzed-time">
-                    Analyzed {repository.lastAnalyzedAt ? new Date(repository.lastAnalyzedAt).toRelativeTimeString() : 'recently'}
+                    Analyzed {repository.lastAnalyzedAt ? new Date(repository.lastAnalyzedAt).toLocaleDateString() : 'recently'}
                   </span>
                 </div>
               </div>
