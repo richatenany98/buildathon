@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Knowledge Graph Builder</title>
+    
+    <!-- Bootstrap CSS with dark theme -->
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    
+    <!-- D3.js for graph visualization -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">
+                <i class="fas fa-project-diagram text-primary me-2"></i>
+                Knowledge Graph Builder
+            </a>
+            <div class="navbar-nav ms-auto">
+                <span class="nav-link" id="health-status">
+                    <i class="fas fa-circle text-secondary me-1"></i>
+                    Checking...
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-4">
+        <div class="row g-4">
+            <!-- Left Panel - Controls -->
+            <div class="col-lg-4">
+                <!-- Upload Section -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-upload me-2"></i>
+                            Data Ingestion
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="upload-form" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="files" class="form-label">Upload Text Files</label>
+                                <input class="form-control" type="file" id="files" name="files" multiple accept=".txt">
+                                <div class="form-text">Select one or more .txt files (max 100MB total)</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="urls" class="form-label">Web URLs</label>
+                                <textarea class="form-control" id="urls" name="urls" rows="3" placeholder="Enter URLs, one per line"></textarea>
+                                <div class="form-text">Enter web pages to scrape for content</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="progress" id="upload-progress" style="display: none;">
+                                    <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                </div>
+                                <div id="upload-status" class="text-muted small"></div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary w-100" id="upload-btn">
+                                <i class="fas fa-upload me-2"></i>
+                                Start Ingestion
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Graph Controls -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-cogs me-2"></i>
+                            Graph Controls
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <button id="build-graph-btn" class="btn btn-success w-100 mb-2" disabled>
+                                <i class="fas fa-play me-2"></i>
+                                Build Knowledge Graph
+                            </button>
+                            <div id="build-status" class="text-muted small"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="search-concepts" class="form-label">Search Concepts</label>
+                            <input type="text" class="form-control" id="search-concepts" placeholder="Search for concepts...">
+                            <div id="search-results" class="mt-2" style="display: none;"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Graph Layout</label>
+                            <div class="d-flex gap-2">
+                                <button id="center-graph" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-crosshairs me-1"></i>
+                                    Center
+                                </button>
+                                <button id="reset-zoom" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-expand me-1"></i>
+                                    Reset Zoom
+                                </button>
+                                <button id="reheat-simulation" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-play me-1"></i>
+                                    Animate
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Q&A Section -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-question-circle me-2"></i>
+                            Ask Questions
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="qa-form">
+                            <div class="mb-3">
+                                <label for="question" class="form-label">Your Question</label>
+                                <textarea class="form-control" id="question" name="question" rows="3" placeholder="Ask a question about the knowledge graph..."></textarea>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="highlight-evidence" checked>
+                                    <label class="form-check-label" for="highlight-evidence">
+                                        Highlight evidence in graph
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary w-100" id="ask-btn" disabled>
+                                <i class="fas fa-paper-plane me-2"></i>
+                                Ask Question
+                            </button>
+                        </form>
+                        
+                        <div id="qa-answer" class="mt-3" style="display: none;">
+                            <div class="alert alert-info mb-0">
+                                <div id="answer-text"></div>
+                                <div id="evidence-info" class="mt-2 small text-muted"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel - Graph Visualization -->
+            <div class="col-lg-8">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-project-diagram me-2"></i>
+                            Knowledge Graph Visualization
+                        </h5>
+                        <div class="d-flex align-items-center gap-3">
+                            <span id="graph-stats" class="text-muted small"></span>
+                            <div class="dropdown">
+                                <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-eye me-1"></i>
+                                    View
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" id="view-all">Show All Nodes</a></li>
+                                    <li><a class="dropdown-item" href="#" id="view-recent">Show Recent</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="#" id="view-entities">Entities Only</a></li>
+                                    <li><a class="dropdown-item" href="#" id="view-keywords">Keywords Only</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0 position-relative">
+                        <div id="graph-container" class="w-100 h-100 position-relative">
+                            <svg id="graph-svg" class="w-100 h-100"></svg>
+                            <div id="graph-loading" class="position-absolute top-50 start-50 translate-middle text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="mt-2 text-muted">Waiting for graph data...</p>
+                            </div>
+                            <div id="graph-empty" class="position-absolute top-50 start-50 translate-middle text-center" style="display: none;">
+                                <i class="fas fa-project-diagram fa-3x text-muted mb-3"></i>
+                                <p class="text-muted">Upload documents and build the graph to get started</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Node Details Panel -->
+                        <div id="node-details" class="position-absolute top-0 end-0 bg-dark border rounded p-3 m-3" style="display: none; max-width: 300px; z-index: 1000;">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="mb-0" id="node-title">Node Details</h6>
+                                <button type="button" class="btn-close btn-close-white" id="close-node-details"></button>
+                            </div>
+                            <div id="node-content">
+                                <!-- Node details will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="success-toast" class="toast align-items-center text-bg-success border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+        <div id="error-toast" class="toast align-items-center text-bg-danger border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body"></div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Application Scripts -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/graph-visualization.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/qa-interface.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+from demo_app import app  # noqa: F401
