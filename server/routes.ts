@@ -32,19 +32,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Helper function to normalize GitHub URLs
+  function normalizeGitHubUrl(url: string): string {
+    try {
+      const urlObj = new URL(url);
+      
+      // Handle GitHub URLs
+      if (urlObj.hostname === 'github.com') {
+        const pathParts = urlObj.pathname.split('/').filter(Boolean);
+        if (pathParts.length >= 2) {
+          const owner = pathParts[0];
+          const repo = pathParts[1];
+          return `https://github.com/${owner}/${repo}.git`;
+        }
+      }
+      
+      // Return original URL if not GitHub or can't parse
+      return url;
+    } catch {
+      return url;
+    }
+  }
+
   // Create and analyze repository
   app.post("/api/repositories", async (req, res) => {
     try {
       const validatedData = insertRepositorySchema.parse(req.body);
       
+      // Normalize the URL
+      const normalizedUrl = normalizeGitHubUrl(validatedData.url);
+      const repositoryData = { ...validatedData, url: normalizedUrl };
+      
       // Check if repository already exists
-      const existing = await storage.getRepositoryByUrl(validatedData.url);
+      const existing = await storage.getRepositoryByUrl(normalizedUrl);
       if (existing) {
         return res.status(400).json({ error: "Repository already exists" });
       }
 
       // Create repository record
-      const repository = await storage.createRepository(validatedData);
+      const repository = await storage.createRepository(repositoryData);
       res.json(repository);
 
       // Start analysis in background
