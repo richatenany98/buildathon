@@ -85,7 +85,7 @@ export default function TimelineVisualization({ events }: TimelineVisualizationP
                     <span className="text-sm font-medium" data-testid={`event-title-${index}`}>
                       {event.title}
                     </span>
-                    <Badge variant={getCategoryBadgeVariant(event.category) as any} size="sm">
+                    <Badge variant={getCategoryBadgeVariant(event.category) as any}>
                       {formatCategory(event.category)}
                     </Badge>
                   </div>

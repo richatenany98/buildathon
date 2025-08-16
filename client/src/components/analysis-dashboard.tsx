@@ -213,14 +213,14 @@ ${recentQueries.slice(0, 5).map((query, index) => `
       </Card>
 
         <div className="grid lg:grid-cols-3 gap-8">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          <QueryInterface repositoryId={repository.id} />
-          <TimelineVisualization events={changeEvents} />
-        </div>
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-6">
+            <QueryInterface repositoryId={repository.id} />
+            <TimelineVisualization events={changeEvents} />
+          </div>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
+          {/* Sidebar */}
+          <div className="space-y-6">
           {/* Analysis Summary */}
           <Card className="shadow-sm">
             <CardContent className="p-6">
@@ -310,6 +310,7 @@ ${recentQueries.slice(0, 5).map((query, index) => `
               </div>
             </CardContent>
           </Card>
+          </div>
         </div>
       </div>
     </div>
