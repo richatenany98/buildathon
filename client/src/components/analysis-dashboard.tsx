@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { GitBranch, Download, RefreshCw } from "lucide-react";
+import { GitBranch, Download } from "lucide-react";
 import type { Repository, ChangeEvent, Query } from "@shared/schema";
 
 interface AnalysisDashboardProps {
@@ -141,10 +141,10 @@ ${recentQueries.slice(0, 5).map((query, index) => `
     }, {} as Record<string, number>);
 
     return [
-      { name: "New Features", count: stats.new_feature || 0, color: "bg-github-success" },
-      { name: "Enhancements", count: stats.enhancement || 0, color: "bg-github-blue" },
-      { name: "Bug Fixes", count: stats.bug_fix || 0, color: "bg-github-error" },
-      { name: "Refactoring", count: stats.refactoring || 0, color: "bg-github-warning" },
+      { name: "New Features", count: stats.new_feature || 0, color: "bg-green-500" },
+      { name: "Enhancements", count: stats.enhancement || 0, color: "bg-blue-500" },
+      { name: "Bug Fixes", count: stats.bug_fix || 0, color: "bg-red-500" },
+      { name: "Refactoring", count: stats.refactoring || 0, color: "bg-gray-500" },
     ];
   };
 
@@ -198,14 +198,6 @@ ${recentQueries.slice(0, 5).map((query, index) => `
                 >
                   <Download className="w-4 h-4 mr-2" />
                   Export Report
-                </Button>
-                <Button 
-                  size="sm" 
-                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200" 
-                  data-testid="button-reanalyze"
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Re-analyze
                 </Button>
               </div>
           </div>

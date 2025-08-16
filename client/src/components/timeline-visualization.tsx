@@ -22,10 +22,10 @@ const getCategoryColor = (category: string) => {
 
 const getCategoryBadgeVariant = (category: string) => {
   switch (category) {
-    case "new_feature": return "default";
-    case "enhancement": return "secondary"; 
-    case "bug_fix": return "destructive";
-    case "refactoring": return "outline";
+    case "new_feature": return "default"; // green
+    case "enhancement": return "secondary"; // blue 
+    case "bug_fix": return "destructive"; // red
+    case "refactoring": return "outline"; // neutral
     case "optimization": return "secondary";
     default: return "outline";
   }
