@@ -209,26 +209,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Analyze commits
       const commits = await gitAnalyzer.analyzeCommits(repositoryId);
+      console.log(`Analyzed ${commits.length} commits for repository ${repositoryId}`);
       
       // Get repository stats
       const stats = await gitAnalyzer.getRepositoryStats();
+      console.log(`Repository stats: ${stats.contributors.size} contributors, ${stats.totalFiles} files`);
 
       // Analyze with AI
       const dbCommits = await storage.getCommitsByRepository(repositoryId);
+      console.log(`Retrieved ${dbCommits.length} commits from database`);
       await aiAnalyzer.analyzeCommitBatches(repositoryId, dbCommits);
 
+      // Get final change events count
+      const changeEvents = await storage.getChangeEventsByRepository(repositoryId);
+      const majorFeatures = changeEvents.filter(e => e.category === 'new_feature');
+
       // Update repository with final stats
-      await storage.updateRepository(repositoryId, {
-        analysisStatus: "completed",
+      const updateData = {
+        analysisStatus: "completed" as const,
         lastAnalyzedAt: new Date(),
-        commitCount: commits.length,
+        commitCount: dbCommits.length,
         contributorCount: stats.contributors.size,
         fileCount: stats.totalFiles,
-        changeEventCount: (await storage.getChangeEventsByRepository(repositoryId)).length,
-        majorFeatureCount: (await storage.getChangeEventsByRepository(repositoryId))
-          .filter(e => e.category === 'new_feature').length,
+        changeEventCount: changeEvents.length,
+        majorFeatureCount: majorFeatures.length,
         confidenceScore: 94, // Default confidence score
-      });
+      };
+      
+      console.log(`Updating repository with stats:`, updateData);
+      await storage.updateRepository(repositoryId, updateData);
 
       // Cleanup
       await gitAnalyzer.cleanup();
