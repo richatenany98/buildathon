@@ -143,12 +143,5 @@ export const insertQuerySchema = z.object({
   question: z.string(),
 });
 
-export type InsertRepository = z.infer<typeof insertRepositorySchema>;
-export type InsertQuery = z.infer<typeof insertQuerySchema>;
-
-export type Repository = typeof repositories.$inferSelect;
-export type InsertRepository = z.infer<typeof insertRepositorySchema>;
-export type Commit = typeof commits.$inferSelect;
-export type ChangeEvent = typeof changeEvents.$inferSelect;
-export type Query = typeof queries.$inferSelect;
-export type InsertQuery = z.infer<typeof insertQuerySchema>;
+export type InsertRepositoryType = z.infer<typeof insertRepositorySchema>;
+export type InsertQueryType = z.infer<typeof insertQuerySchema>;

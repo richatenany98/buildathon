@@ -228,7 +228,7 @@ export class GitAnalyzer {
       }
 
       // Store commits in database
-      const commitRecords: Omit<Commit, 'id'>[] = commits.map(commit => ({
+      const commitRecords: Omit<Commit, '_id'>[] = commits.map(commit => ({
         repositoryId,
         sha: commit.sha,
         message: commit.message,
@@ -243,7 +243,9 @@ export class GitAnalyzer {
         changeTypes: commit.changeTypes,
       }));
 
+      console.log(`About to save ${commitRecords.length} commits to database for repository ${repositoryId}`);
       await storage.createCommits(commitRecords);
+      console.log(`Successfully saved ${commitRecords.length} commits to database`);
       
       return commits;
     } catch (error) {
