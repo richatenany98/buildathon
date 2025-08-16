@@ -1,0 +1,284 @@
+# Project 5: Universal Knowledge‑Graph Builder — PRD
+
+## 1) Executive Summary
+
+Convert a small document archive (TXT files and URLs; total input size ≤ 100 MB) into an interactive knowledge graph of concepts with node/edge visualization. Provide a natural‑language (NL) Q\&A layer to answer questions over the graph. Persistence uses Neo4j for the graph and MongoDB for ingestion metadata, content storage, and Q\&A traces.
+
+---
+
+## 2) Goals
+
+* **Ingestion:** Accept TXT files and URLs (≤ 100 MB combined). Normalize and store raw text.
+* **Graph Construction:** Extract concepts and relations from content; build a concept graph in Neo4j.
+* **Visualization:** Expose API to fetch graph data (nodes/edges, layouts, subgraph filtering) for an interactive UI.
+* **NL Q\&A:** Accept natural‑language questions; answer using the graph (return answer + supporting nodes/edges).
+* **Operational:** Provide idempotent ingestion, progress/status, and auditability of Q\&A interactions.
+
+**Non‑Goals**
+
+* Rich media ingestion beyond TXT and URLs.
+* Real‑time web crawling beyond the provided URL list.
+* External model/service choices (left to implementation).
+
+---
+
+## 3) Detailed Requirements
+
+### 3.1 Ingestion
+
+* Inputs: multiple TXT files; multiple URLs.
+* Enforce **total payload ≤ 100 MB** across all inputs.
+* For URLs, fetch page, strip boilerplate, extract visible text.
+* Normalize to UTF‑8, de‑duplicate identical documents by hash.
+* Store raw text and minimal metadata in MongoDB; link each document to its eventual nodes/edges in Neo4j.
+* Provide ingestion job status: `queued → processing → completed | failed` with error messages.
+
+### 3.2 Concept/Relation Extraction
+
+* From each document, extract **concepts** (terms/entities/keywords) and **relations** (typed or untyped edges between concepts) sufficient to build a useful graph.
+* Support concept canonicalization (merge duplicates across docs) and keep provenance to source documents.
+* Persist nodes/edges in Neo4j with back‑references to MongoDB document IDs.
+
+### 3.3 Graph Model & Operations
+
+* Node types: `Concept`, `Document` (optional helper node to preserve provenance), and implementation‑specific types if needed.
+* Relationships: `MENTIONS` (Document→Concept), `RELATED_TO` (Concept↔Concept), additional relation types permitted by extractor.
+* Required operations via API:
+
+  * Create/update graph from a completed ingestion job.
+  * Merge duplicate concepts by canonical key.
+  * Fetch: full graph summary; filtered subgraph by concept ids, degree, relation type, or text query; neighborhood expansion (N‑hops); node/edge details with provenance.
+
+### 3.4 Visualization Support
+
+* Provide API for UI to retrieve:
+
+  * Node/edge lists with attributes (id, label, type, weight, source refs).
+  * Optional server‑side positions (e.g., a stable layout seed) and incremental neighborhoods.
+  * Search endpoint for concept lookup and auto‑complete.
+
+### 3.5 NL Q\&A Over the Graph
+
+* Input: free‑form question string.
+* Output: answer text plus **supporting evidence** (list of node IDs, edge IDs, and source document ids/urls).
+* Must support:
+
+  * Graph traversal queries (e.g., paths, neighbors, counts).
+  * Evidence‑first responses (return supporting subgraph data).
+  * Deterministic re‑runs with the same graph state.
+* Log each Q\&A request/response in MongoDB (question, parameters, referenced nodes/edges, timing, status).
+
+### 3.6 Limits & Validation
+
+* Reject inputs exceeding 100 MB total with clear error.
+* Validate URLs (HTTP(S) only). Timeout & retry strategy; mark failed fetches.
+* Ensure idempotency: same content hash does not create duplicate graph structures.
+
+### 3.7 Telemetry & Audit
+
+* Store ingestion/job metrics and Q\&A traces in MongoDB.
+* Each graph node/edge retains provenance (source document ids/urls and spans where applicable).
+
+---
+
+## 4) Technical Specs
+
+### 4.1 Data Stores
+
+* **Neo4j**: primary graph store for concepts/relations/provenance edges.
+* **MongoDB**: metadata, documents, ingestion jobs, Q\&A logs, caches.
+
+### 4.2 MongoDB Schema
+
+```json
+// collection: documents
+{
+  "_id": "ObjectId",
+  "source_type": "txt" | "url",
+  "source_uri": "string | null",      // file name or URL
+  "content_hash": "string",           // used for deduplication
+  "content_text": "string",           // normalized UTF-8 text
+  "byte_size": 12345,                  // original size in bytes
+  "ingest_job_id": "ObjectId",
+  "created_at": "ISODate",
+  "updated_at": "ISODate"
+}
+
+// collection: ingest_jobs
+{
+  "_id": "ObjectId",
+  "status": "queued" | "processing" | "completed" | "failed",
+  "inputs": [
+    {"type": "txt", "name": "string", "byte_size": 123},
+    {"type": "url", "url": "https://..."}
+  ],
+  "total_bytes": 9999,
+  "error": "string | null",
+  "created_at": "ISODate",
+  "updated_at": "ISODate"
+}
+
+// collection: graph_sync
+{
+  "_id": "ObjectId",
+  "ingest_job_id": "ObjectId",
+  "neo4j_tx_id": "string | null",
+  "status": "pending" | "in_progress" | "completed" | "failed",
+  "stats": {"nodes_created": 0, "edges_created": 0, "concepts_merged": 0},
+  "error": "string | null",
+  "created_at": "ISODate",
+  "updated_at": "ISODate"
+}
+
+// collection: qa_logs
+{
+  "_id": "ObjectId",
+  "question": "string",
+  "params": {"mode": "graph"},      // implementation-specific flags
+  "answer_text": "string | null",
+  "evidence": {"node_ids": ["string"], "edge_ids": ["string"], "document_ids": ["ObjectId"]},
+  "status": "ok" | "error",
+  "error": "string | null",
+  "duration_ms": 1234,
+  "created_at": "ISODate"
+}
+```
+
+### 4.3 Neo4j Graph Model (Labels & Relationships)
+
+```cypher
+// Labels
+(:Concept { id: string, label: string, canonical_key: string, created_at: datetime })
+(:Document { id: string, source_uri: string, content_hash: string })
+
+// Relationships
+(:Document)-[:MENTIONS { span_start: int?, span_end: int? }]->(:Concept)
+(:Concept)-[:RELATED_TO { weight: float?, relation: string? }]->(:Concept)
+```
+
+**Indexes/Constraints**
+
+* `CONSTRAINT concept_id IF NOT EXISTS ON (c:Concept) ASSERT c.id IS UNIQUE`
+* `CONSTRAINT document_id IF NOT EXISTS ON (d:Document) ASSERT d.id IS UNIQUE`
+* Optional: index on `Concept.canonical_key`.
+
+### 4.4 API Endpoints (JSON over HTTP)
+
+**Auth:** header `Authorization: Bearer MONGODB_AUTH_TOKEN={{secure_token_here}}`
+
+#### Ingestion
+
+* `POST /ingest/jobs`
+
+  * Body: `{ files: [multipart TXT], urls: [string] }`
+  * Validates total size ≤ 100 MB, returns `{ job_id }`.
+* `GET /ingest/jobs/{job_id}` → status + counters.
+
+#### Graph Build
+
+* `POST /graph/build`
+
+  * Body: `{ ingest_job_id: string }`
+  * Runs extraction + Neo4j upsert; returns `{ sync_id, stats }`.
+* `GET /graph/build/{sync_id}` → sync status + stats.
+
+#### Graph Query & Visualization
+
+* `GET /graph/summary` → counts by label, relation types.
+* `POST /graph/subgraph`
+
+  * Body: `{ concept_ids?: [string], query?: string, max_hops?: number, max_nodes?: number, relation_types?: [string] }`
+  * Returns: `{ nodes: [...], edges: [...], layout_seed?: number }`.
+* `GET /graph/nodes/{id}` → node details + provenance.
+* `GET /graph/edges/{id}` → edge details + provenance.
+* `GET /graph/search?q=...` → concept auto‑complete.
+
+#### NL Q\&A
+
+* `POST /qa/ask`
+
+  * Body: `{ question: string, options?: { return_subgraph?: boolean, max_hops?: number } }`
+  * Returns: `{ answer: string, evidence: { node_ids:[], edge_ids:[], document_ids:[] } }`.
+
+### 4.5 Processing Pipeline (High‑Level)
+
+1. **Ingest** TXT/URLs → normalize text → store in `documents` (MongoDB) → create `ingest_job`.
+2. **Extract** concepts/relations → prepare upsert batches.
+3. **Graph Build** upsert to Neo4j (create/merge nodes/edges, set constraints) → record `graph_sync`.
+4. **Q\&A** interpret question → traverse/query graph → compose answer with evidence → log to `qa_logs`.
+
+### 4.6 Auth & Security
+
+* All endpoints require bearer token: `MONGODB_AUTH_TOKEN={{secure_token_here}}`.
+* Validate content types; sanitize URLs; enforce size limits server‑side.
+* Principle of least privilege for DB connections.
+
+### 4.7 Performance & Scalability
+
+* Batch Neo4j writes (transactional chunks) to avoid large single commits.
+* Cap subgraph responses with `max_nodes`/`max_hops`.
+* Cache frequent Q\&A results in `qa_logs` (lookup by normalized question + graph version).
+
+---
+
+## 5) Edge Cases
+
+* Total upload exceeds **100 MB** → reject with clear error and list of sizes by item.
+* URL fetch failures (timeouts, 4xx/5xx) → mark item failed, continue others.
+* Duplicates (same content hash) across TXT/URL → de‑duplicate and reuse references.
+* Empty/near‑empty text after boilerplate removal → skip with warning.
+* Non‑UTF‑8 or mixed encodings → normalize; if impossible, mark failed.
+* Concept collisions where different terms map to same canonical key → merge with provenance preserved.
+* Extremely dense nodes (hubs) → cap degree in subgraph responses.
+* Cycles and multi‑edges → supported; ensure front‑end renders without infinite expansion.
+* Question with no supporting evidence → return "no answer found" with empty evidence arrays.
+
+---
+
+## 6) Unit Test Cases (per Feature)
+
+### Ingestion
+
+* Accepts multiple TXT files whose combined size = 100 MB → **pass**.
+* Rejects when combined size = 100 MB + 1 byte → **fail with 413**.
+* URL with 200 OK and text body is stored with correct `content_hash`.
+* URL with 404/timeout → item marked failed; job completes with partial success.
+* Duplicate TXT upload → single MongoDB document referenced twice in job report.
+
+### Graph Build
+
+* Creates `Concept` nodes and `MENTIONS` edges per document.
+* Merges identical concepts (same canonical key) across documents.
+* Idempotent re‑run of same `ingest_job_id` does not increase node/edge counts.
+* Constraint violations handled gracefully (no partial commits left dangling).
+
+### Graph Query & Visualization
+
+* `/graph/subgraph` with `concept_ids` returns only requested neighborhoods within `max_hops`.
+* Degree capping respected when node has >N neighbors.
+* `/graph/search` returns concepts matching prefix and returns stable ids.
+* Node/edge detail endpoints include provenance (document ids/urls) and relation attributes.
+
+### NL Q\&A
+
+* `POST /qa/ask` with a question that maps to a known path returns non‑empty answer and evidence.
+* Unknown question returns 200 with `answer` message and empty `evidence`.
+* Options `return_subgraph=true` returns node/edge ids referenced.
+* Q\&A log written with `status: ok` and duration.
+
+### Auth & Validation
+
+* Missing/invalid bearer token → 401.
+* Oversized upload → 413 with error message.
+* Non‑HTTP(S) URL inputs → 400.
+
+---
+
+## 7) Open Questions
+
+* Provide **starter code repository** and expected language/framework (none provided).
+* Define acceptable **relation types** taxonomy (free‑text vs controlled list?).
+* Clarify whether **Document** nodes should be visible in visualization or used only for provenance.
+* Specify UI expectations for layout (server‑side layout seed vs client‑side only).
+* Any retention policy for documents, logs, and graph versions?
+* Should Q\&A operate strictly on graph structure, or also leverage full‑text snippets from documents?
