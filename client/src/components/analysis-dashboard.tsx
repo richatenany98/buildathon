@@ -16,12 +16,12 @@ interface AnalysisDashboardProps {
 
 export default function AnalysisDashboard({ repository }: AnalysisDashboardProps) {
   const { data: changeEvents = [] } = useQuery({
-    queryKey: ["/api/repositories", repository.id, "events"],
+    queryKey: ["/api/repositories", repository._id, "events"],
     queryFn: getQueryFn<ChangeEvent[]>({ on401: "throw" }),
   });
 
   const { data: recentQueries = [] } = useQuery({
-    queryKey: ["/api/repositories", repository.id, "queries"],
+    queryKey: ["/api/repositories", repository._id, "queries"],
     queryFn: getQueryFn<Query[]>({ on401: "throw" }),
   });
 
@@ -207,7 +207,7 @@ ${recentQueries.slice(0, 5).map((query, index) => `
         <div className="grid lg:grid-cols-3 gap-10">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
-            <QueryInterface repositoryId={repository.id} />
+            <QueryInterface repositoryId={repository._id} />
             <TimelineVisualization events={changeEvents} />
           </div>
 

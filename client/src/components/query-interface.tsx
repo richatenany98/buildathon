@@ -35,7 +35,7 @@ export default function QueryInterface({ repositoryId }: QueryInterfaceProps) {
     },
     onSuccess: (data) => {
       setCurrentResult({
-        id: data.id,
+        id: data._id,
         question: data.question,
         answer: data.answer,
         relatedCommits: data.relatedCommits,
