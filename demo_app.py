@@ -51,13 +51,82 @@ SAMPLE_GRAPH_DATA = {
     ]
 }
 
-# Demo state
+# Demo state - now stores actual processed data
 demo_state = {
     "current_job_id": None,
     "current_sync_id": None,
     "graph_built": False,
-    "uploaded_files": []
+    "uploaded_files": [],
+    "processed_content": [],
+    "dynamic_graph_data": None
 }
+
+# Simple NLP processing for demo
+def extract_concepts_from_text(text):
+    """Extract basic concepts from text for demo purposes"""
+    import re
+    
+    # Simple keyword extraction
+    words = re.findall(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b', text)
+    sentences = text.split('.')
+    
+    concepts = []
+    concept_id = 1
+    
+    # Extract capitalized words/phrases as concepts
+    seen_concepts = set()
+    for word in words:
+        if len(word) > 3 and word.lower() not in seen_concepts:
+            concepts.append({
+                "id": f"concept_{concept_id}",
+                "label": word,
+                "type": "entity",
+                "canonical_key": word.lower()
+            })
+            seen_concepts.add(word.lower())
+            concept_id += 1
+    
+    # Extract some noun phrases from sentences
+    for sentence in sentences[:10]:  # Limit to first 10 sentences
+        sentence = sentence.strip()
+        if len(sentence) > 20:
+            # Simple noun phrase detection
+            noun_phrases = re.findall(r'\b(?:the|a|an)\s+([a-z]+(?:\s+[a-z]+){1,2})\b', sentence.lower())
+            for phrase in noun_phrases:
+                if phrase not in seen_concepts and len(phrase) > 5:
+                    concepts.append({
+                        "id": f"concept_{concept_id}",
+                        "label": phrase.title(),
+                        "type": "noun_phrase",
+                        "canonical_key": phrase.lower()
+                    })
+                    seen_concepts.add(phrase)
+                    concept_id += 1
+    
+    return concepts[:15]  # Limit to 15 concepts for demo
+
+def create_relationships(concepts):
+    """Create simple relationships between concepts"""
+    edges = []
+    edge_id = 1
+    
+    for i, concept1 in enumerate(concepts):
+        for j, concept2 in enumerate(concepts[i+1:], i+1):
+            # Create relationships based on simple rules
+            if j - i <= 3:  # Connect nearby concepts
+                edges.append({
+                    "id": f"edge_{edge_id}",
+                    "source": concept1["id"],
+                    "target": concept2["id"],
+                    "type": "RELATED_TO" if concept1["type"] == concept2["type"] else "MENTIONS"
+                })
+                edge_id += 1
+                if len(edges) >= 20:  # Limit edges for demo
+                    break
+        if len(edges) >= 20:
+            break
+    
+    return edges
 
 @app.route('/')
 def index():
@@ -77,7 +146,7 @@ def health():
 
 @app.route('/api/ingest/jobs', methods=['POST'])
 def create_ingest_job():
-    """Demo ingestion job creation"""
+    """Demo ingestion job creation - now processes actual file content"""
     try:
         files = request.files.getlist('files')
         urls_json = request.form.get('urls', '[]')
@@ -86,19 +155,45 @@ def create_ingest_job():
         if not files and not urls:
             return jsonify({'error': 'No files or URLs provided'}), 400
         
-        # Simulate job creation
+        # Clear previous data
+        demo_state["processed_content"] = []
+        demo_state["dynamic_graph_data"] = None
+        demo_state["graph_built"] = False
+        
+        # Process uploaded files
+        total_bytes = 0
+        for file in files:
+            if file.filename:
+                content = file.read().decode('utf-8', errors='ignore')
+                total_bytes += len(content)
+                demo_state["processed_content"].append({
+                    'name': file.filename,
+                    'content': content,
+                    'type': 'file'
+                })
+                file.seek(0)  # Reset file pointer
+        
+        # Process URLs (simple demo)
+        if urls:
+            for url in urls:
+                # For demo purposes, create some sample content based on URL
+                sample_content = f"Content from {url}. This is demonstration content that would normally be extracted from the web page. The system would analyze this text to find key concepts and relationships."
+                demo_state["processed_content"].append({
+                    'name': url,
+                    'content': sample_content,
+                    'type': 'url'
+                })
+                total_bytes += len(sample_content)
+        
+        # Create job
         job_id = f"demo_job_{random.randint(1000, 9999)}"
         demo_state["current_job_id"] = job_id
         demo_state["uploaded_files"] = [f.filename for f in files] + urls
         
-        total_bytes = sum(len(f.read()) for f in files if f.filename)
-        for f in files:
-            f.seek(0)  # Reset file pointer
-        
         return jsonify({
             'job_id': job_id,
             'status': 'queued',
-            'total_bytes': total_bytes + len(urls) * 50000,  # Estimate URL sizes
+            'total_bytes': total_bytes,
             'inputs_count': len(files) + len(urls)
         }), 201
         
@@ -130,13 +225,49 @@ def get_ingest_job_status(job_id):
 
 @app.route('/api/graph/build', methods=['POST'])
 def build_graph():
-    """Demo graph building"""
+    """Demo graph building - now processes uploaded content"""
     try:
         data = request.get_json()
         job_id = data.get('ingest_job_id')
         
         if job_id != demo_state.get("current_job_id"):
             return jsonify({'error': 'Invalid job ID'}), 400
+        
+        # Process the uploaded content to create dynamic graph data
+        all_concepts = []
+        all_edges = []
+        concept_counter = 1
+        edge_counter = 1
+        
+        for content_item in demo_state.get("processed_content", []):
+            text = content_item['content']
+            
+            # Extract concepts from this content
+            concepts = extract_concepts_from_text(text)
+            
+            # Renumber concepts to avoid ID conflicts
+            for concept in concepts:
+                concept['id'] = f"concept_{concept_counter}"
+                concept_counter += 1
+            
+            all_concepts.extend(concepts)
+            
+            # Create relationships within this content
+            edges = create_relationships(concepts)
+            for edge in edges:
+                edge['id'] = f"edge_{edge_counter}"
+                edge_counter += 1
+            
+            all_edges.extend(edges)
+        
+        # If no content was processed, use sample data
+        if not all_concepts:
+            demo_state["dynamic_graph_data"] = SAMPLE_GRAPH_DATA
+        else:
+            demo_state["dynamic_graph_data"] = {
+                "nodes": all_concepts,
+                "edges": all_edges
+            }
         
         sync_id = f"demo_sync_{random.randint(1000, 9999)}"
         demo_state["current_sync_id"] = sync_id
@@ -156,14 +287,18 @@ def get_build_status(sync_id):
     try:
         if sync_id == demo_state.get("current_sync_id"):
             demo_state["graph_built"] = True
+            
+            # Use dynamic graph data if available
+            graph_data = demo_state.get("dynamic_graph_data", SAMPLE_GRAPH_DATA)
+            
             return jsonify({
                 'sync_id': sync_id,
                 'status': 'completed',
                 'stats': {
-                    'nodes_created': len(SAMPLE_GRAPH_DATA["nodes"]),
-                    'edges_created': len(SAMPLE_GRAPH_DATA["edges"]),
+                    'nodes_created': len(graph_data["nodes"]),
+                    'edges_created': len(graph_data["edges"]),
                     'concepts_merged': 3,
-                    'documents_processed': len(demo_state.get("uploaded_files", []))
+                    'documents_processed': len(demo_state.get("processed_content", []))
                 },
                 'error': None,
                 'created_at': datetime.utcnow().isoformat(),
@@ -187,21 +322,24 @@ def get_graph_summary():
             'total_relationships': 0
         })
     
+    # Use dynamic graph data if available
+    graph_data = demo_state.get("dynamic_graph_data", SAMPLE_GRAPH_DATA)
+    
     return jsonify({
         'nodes_by_label': {
-            'Concept': len(SAMPLE_GRAPH_DATA["nodes"])
+            'Concept': len(graph_data["nodes"])
         },
         'relationships_by_type': {
-            'RELATED_TO': len([e for e in SAMPLE_GRAPH_DATA["edges"] if e["type"] == "RELATED_TO"]),
-            'MENTIONS': len([e for e in SAMPLE_GRAPH_DATA["edges"] if e["type"] == "MENTIONS"])
+            'RELATED_TO': len([e for e in graph_data["edges"] if e["type"] == "RELATED_TO"]),
+            'MENTIONS': len([e for e in graph_data["edges"] if e["type"] == "MENTIONS"])
         },
-        'total_nodes': len(SAMPLE_GRAPH_DATA["nodes"]),
-        'total_relationships': len(SAMPLE_GRAPH_DATA["edges"])
+        'total_nodes': len(graph_data["nodes"]),
+        'total_relationships': len(graph_data["edges"])
     })
 
 @app.route('/api/graph/subgraph', methods=['POST'])
 def get_subgraph():
-    """Demo subgraph data"""
+    """Demo subgraph data - now uses dynamic content"""
     if not demo_state.get("graph_built", False):
         return jsonify({'nodes': [], 'edges': []})
     
@@ -211,31 +349,34 @@ def get_subgraph():
         query = data.get('query')
         max_nodes = min(data.get('max_nodes', 100), 200)
         
+        # Use dynamic graph data if available
+        graph_data = demo_state.get("dynamic_graph_data", SAMPLE_GRAPH_DATA)
+        
         # Filter data based on request
         if concept_ids:
             # Return specific concepts and their neighbors
-            filtered_nodes = [n for n in SAMPLE_GRAPH_DATA["nodes"] if n["id"] in concept_ids]
-            connected_edges = [e for e in SAMPLE_GRAPH_DATA["edges"] 
+            filtered_nodes = [n for n in graph_data["nodes"] if n["id"] in concept_ids]
+            connected_edges = [e for e in graph_data["edges"] 
                              if e["source"] in concept_ids or e["target"] in concept_ids]
             # Add connected nodes
             connected_node_ids = set()
             for edge in connected_edges:
                 connected_node_ids.add(edge["source"])
                 connected_node_ids.add(edge["target"])
-            filtered_nodes.extend([n for n in SAMPLE_GRAPH_DATA["nodes"] 
+            filtered_nodes.extend([n for n in graph_data["nodes"] 
                                  if n["id"] in connected_node_ids and n not in filtered_nodes])
         elif query:
             # Search by label
-            filtered_nodes = [n for n in SAMPLE_GRAPH_DATA["nodes"] 
+            filtered_nodes = [n for n in graph_data["nodes"] 
                             if query.lower() in n["label"].lower()][:max_nodes]
             node_ids = [n["id"] for n in filtered_nodes]
-            connected_edges = [e for e in SAMPLE_GRAPH_DATA["edges"] 
+            connected_edges = [e for e in graph_data["edges"] 
                              if e["source"] in node_ids or e["target"] in node_ids]
         else:
             # Return all data limited by max_nodes
-            filtered_nodes = SAMPLE_GRAPH_DATA["nodes"][:max_nodes]
+            filtered_nodes = graph_data["nodes"][:max_nodes]
             node_ids = [n["id"] for n in filtered_nodes]
-            connected_edges = [e for e in SAMPLE_GRAPH_DATA["edges"] 
+            connected_edges = [e for e in graph_data["edges"] 
                              if e["source"] in node_ids and e["target"] in node_ids]
         
         return jsonify({
@@ -250,7 +391,7 @@ def get_subgraph():
 
 @app.route('/api/graph/search', methods=['GET'])
 def search_concepts():
-    """Demo concept search"""
+    """Demo concept search - now uses dynamic content"""
     if not demo_state.get("graph_built", False):
         return jsonify({'concepts': []})
     
@@ -260,13 +401,16 @@ def search_concepts():
     if not query:
         return jsonify({'concepts': []})
     
+    # Use dynamic graph data if available
+    graph_data = demo_state.get("dynamic_graph_data", SAMPLE_GRAPH_DATA)
+    
     matching_concepts = [
         {
             'id': node['id'],
             'label': node['label'],
             'canonical_key': node['canonical_key']
         }
-        for node in SAMPLE_GRAPH_DATA["nodes"]
+        for node in graph_data["nodes"]
         if query in node['label'].lower() or query in node['canonical_key'].lower()
     ][:limit]
     
